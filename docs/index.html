@@ -786,14 +786,14 @@ function snd(k){
     case'throw':tone(700,300,.1,'triangle',.08);break;
     case'mug':tone(500,900,.12,'triangle',.12);break;
     case'power':[523,659,784,1047].forEach((f,i)=>tone(f,f,.1,'square',.06,i*.08));break;
-    case'hurt':tone(520,90,.4,'sawtooth',.07);break;
+    case'hurt':tone(660,330,.16,'triangle',.09);tone(440,220,.18,'triangle',.07,.12);break;
     case'die':[620,520,420,320,220].forEach((f,i)=>tone(f,f*.9,.14,'square',.07,i*.13));break;
     case'clear':[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,f,.14,'square',.06,i*.12));break;
     case'life':[784,988,1175,1568].forEach((f,i)=>tone(f,f,.1,'triangle',.1,i*.09));break;
     case'thud':tone(90,40,.25,'triangle',.2);break;
     case'bosshit':tone(300,80,.2,'square',.1);tone(200,60,.25,'sawtooth',.06,.05);break;
     case'bossdie':[400,350,300,250,200,150,100].forEach((f,i)=>tone(f,f*.8,.16,'sawtooth',.07,i*.1));break;
-    case'gate':tone(80,160,.6,'sawtooth',.06);break;
+    case'gate':tone(330,330,.08,'square',.04);tone(262,262,.1,'square',.04,.1);break;
     case'door':tone(200,120,.08,'square',.1);tone(140,90,.1,'square',.1,.1);break;
     case'engine':tone(60,140,1.2,'sawtooth',.05);break;
     case'boom':tone(180,40,.5,'sawtooth',.06);tone(120,30,.6,'triangle',.12);break;
