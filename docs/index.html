@@ -721,7 +721,7 @@ function updBike(dt){
   if(b.inv<=0&&!isNaN(gh)&&hy>gh-1){bikeCrash(['Ой! Через руль!','Баланс потерян!','Шлем бы не помешал…'][Math.floor(Math.random()*3)]);return;}
   if(cy>VH+40){bikeCrash('Упал в овраг!');return;}
   // чекпоинты, крышки, вода
-  for(let i=0;i<L.bcps.length;i++)if(cx>L.bcps[i]&&(L.cpi||-1)<i){L.cpi=i;L.cpX=L.bcps[i];caption('Чекпоинт! 🚩',1.2);snd('coin');}
+  for(let i=0;i<L.bcps.length;i++)if(cx>L.bcps[i]&&(L.cpi??-1)<i){L.cpi=i;L.cpX=L.bcps[i];caption('Чекпоинт! 🚩',1.2);snd('flag');}
   for(const k of L.cr)if(!k.got&&Math.hypot(k.x-cx,k.y-(cy-8))<16){k.got=true;addCoin();burst(k.x,k.y,'#ffd23f',5,90);}
   for(const k of L.water)if(!k.got&&Math.hypot(k.x-cx,k.y-(cy-6))<18){k.got=true;b.boost=3;addScore(300,k.x,k.y);snd('power');caption('Вода! 💧 Второе дыхание',1.6);}
   if(!L.arrive&&cx>L.end){L.arrive=true;L.arriveT=0;caption('«Гиппо»! Пристёгиваю «Аиста» 🔒',2.5);snd('clear');addScore(1000);}
@@ -803,6 +803,7 @@ function snd(k){
     case'thud':tone(90,40,.25,'triangle',.2);break;
     case'bosshit':tone(300,80,.2,'square',.1);tone(200,60,.25,'sawtooth',.06,.05);break;
     case'bossdie':[400,350,300,250,200,150,100].forEach((f,i)=>tone(f,f*.8,.16,'sawtooth',.07,i*.1));break;
+    case'flag':tone(523,523,.09,'triangle',.05);tone(784,784,.16,'triangle',.05,.09);break;
     case'gate':tone(330,330,.08,'square',.04);tone(262,262,.1,'square',.04,.1);break;
     case'door':tone(200,120,.08,'square',.1);tone(140,90,.1,'square',.1,.1);break;
     case'engine':tone(60,140,1.2,'sawtooth',.05);break;
@@ -1107,7 +1108,7 @@ function update(dt){
   if(h.growPend&&h.big&&setGiant(h,true)){h.growPend=false;snd('life');caption('Вторая кружка! Ты стал больше и сильнее 💪',2.5);}
   if(h.on&&!h.dead){h.safeX=h.x;h.safeY=h.y;}
   if(h.y>VH+20){if(god&&h.safeX!==undefined){h.x=h.safeX;h.y=h.safeY-4;h.vx=0;h.vy=0;h.inv=1;}else{dieHero();return;}}
-  for(let i=L.cps.length-1;i>cpIdx;i--)if(h.x>L.cps[i]*T){cpIdx=i;pops.push({x:h.x,y:h.y-10,t:1.2,s:'Чекпоинт!'});snd('coin');break;}
+  for(let i=L.cps.length-1;i>cpIdx;i--)if(h.x>L.cps[i]*T){cpIdx=i;pops.push({x:h.x,y:h.y-10,t:1.2,s:'Чекпоинт!'});snd('flag');break;}
   // эвакуатор уезжает в начале 5 уровня
   if(L.introTow){L.introTow.x+=150*dt;if(L.introTow.x>cam+VW+120)L.introTow=null;}
   // арена босса
