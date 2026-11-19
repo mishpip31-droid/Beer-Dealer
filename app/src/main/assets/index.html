@@ -645,7 +645,7 @@ function buildRoad(){
 // ================== велопрогулка: горки и баланс ==================
 const BWB=22,BR=5; // база велосипеда и радиус колеса
 function buildBike(){
-  const N=7400,G=new Float32Array(N).fill(NaN);let x=0,h=176;
+  const N=13000,G=new Float32Array(N).fill(NaN);let x=0,h=176;
   const put=(len,f)=>{for(let i=0;i<len&&x<N;i++,x++){const v=f(i/len);G[x]=Math.max(96,Math.min(204,v));}};
   const flat=len=>{const h0=h;put(len,()=>h0);};
   const hill=(len,a)=>{const h0=h;put(len,t=>h0+a*(1-Math.cos(2*Math.PI*t))/2);};
@@ -657,13 +657,23 @@ function buildBike(){
   ramp(80,-22,44,40);flat(160);cps.push(x-115);
   hill(220,-48);hill(220,-56);hill(300,46);bumps(240);slope(260,-56);flat(60);slope(160,48);
   ramp(90,-26,56,48);flat(140);cps.push(x-130);
-  for(let i=0;i<5;i++)slope(26,-9);flat(50);hill(300,-62);hill(220,54);ramp(70,-20,46,34);flat(60);
-  hill(260,-40);bumps(220);slope(200,30);flat(500);
+  // двойной трамплин: после первой посадки сразу выровняться для второго прыжка
+  ramp(70,-24,50,10);flat(60);ramp(70,-24,52,30);flat(80);
+  // длинный крутой подъём (дозируй газ), плато и резкий спуск
+  slope(280,-68);flat(50);slope(140,70);bumps(300);flat(160);cps.push(x-130);
+  // ступеньки, ложбина, узкая площадка между двумя оврагами
+  for(let i=0;i<6;i++)slope(26,-9);flat(50);hill(300,50);ramp(80,-14,50,40);flat(70);ramp(60,-10,48,40);
+  hill(240,-40);bumps(220);flat(160);cps.push(x-130);
+  // волны: овраг, подъём, резкий спуск и ещё один трамплин
+  bumps(300);hill(260,-60);ramp(70,-26,54,36);flat(60);slope(260,-60);flat(40);slope(120,60);ramp(70,-20,50,30);flat(80);
+  hill(200,-44);hill(200,-44);flat(160);cps.push(x-130);
+  // финал: горки, крутой подъём и большой прыжок к «Гиппо»
+  hill(220,-50);hill(220,-54);slope(240,-64);flat(60);ramp(80,-8,58,60);slope(200,30);flat(500);
   const end=x-260,w=x;
   // крышки над горками и трамплинами, бутылки воды
   const cr=[],water=[];
   for(let k=300;k<end;k+=110){const g=G[k];if(isNaN(g))continue;const hi=(k/110|0)%3===0;cr.push({x:k,y:g-(hi?46:22),got:false});}
-  for(const k of [1500,3600,5400])water.push({x:k,y:(G[k]||170)-18,got:false});
+  for(const k of [1500,3600,5300,7100,8600,10100])water.push({x:k,y:(G[k]||170)-18,got:false});
   return {bike:true,G,end,w:Math.ceil(w/T)+2,bcps:cps,cr,water,g:[],ents:[],vents:[],cps:[],arrive:false,arriveT:0};
 }
 function slopeAt(x){const a=gAt(x-2),b=gAt(x+2),c=gAt(x);if(!isNaN(a)&&!isNaN(b))return (b-a)/4;if(!isNaN(b)&&!isNaN(c))return (b-c)/2;if(!isNaN(a)&&!isNaN(c))return (c-a)/2;return 0;}
