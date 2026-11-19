@@ -7,7 +7,7 @@ HTML5-игра (`app/src/main/assets/index.html`).
 
 1. В Code on the Go на главном экране выберите **Clone Git repository**.
 2. Вставьте адрес: `https://github.com/mishpip31-droid/Beer-Dealer.git`
-   (ветка `main`), дождитесь клонирования и откройте проект.
+   дождитесь клонирования и откройте проект.
 3. Дождитесь синхронизации Gradle (в первый раз нужен интернет).
 4. Запустите сборку **assembleDebug** (кнопка ▶ / Build).
 5. APK появится в `app/build/outputs/apk/debug/app-debug.apk`; установите его.
