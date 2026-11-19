@@ -238,8 +238,8 @@ const MGRPAL={K:'#4a4a4a',S:'#f0c3a0',n:'#d79a7a',g:'#222',w:'#cfe6ff',k:'#111',
 const MGR=pair(MGRROWS,MGRPAL); // начальник
 const ZAV=pair(MGRROWS.map((r,j)=>j>=2&&j<=9?r.slice(0,3)+'K'+r.slice(4,14)+'K'+r.slice(15):j===0?'.....KKKKKKKK.......':r),
   Object.assign({},MGRPAL,{K:'#a0461f',g:'#6a2c8a',w:'#f0dcff',r:'#d6336c',W:'#2a9d8f',R:'#f1faee',N:'#264653'})); // заведующая
-const RIV=pair(MGRROWS,Object.assign({},MGRPAL,{K:'#161616',S:'#e9b894',n:'#cf9270',g:'#0d0d0d',w:'#555',r:'#7a2e2e',W:'#8e1b2a',R:'#ffd23f',N:'#1f1f1f',b:'#c0262d',p:'#ffd23f'})); // конкурент
-const RBOTTLE=spr(["..y..",".rRr.",".rRr.","rRRRr","rRwRr","rRwRr","rRRRr",".rrr."],{y:'#ddd',r:'#7a1220',R:'#c0262d',w:'#ffb3b3'});
+const RIV=pair(MGRROWS,Object.assign({},MGRPAL,{K:'#161616',S:'#e9b894',n:'#cf9270',g:'#0d0d0d',w:'#555',r:'#7a2e2e',W:'#1d3f7a',R:'#e9c46a',N:'#1f1f1f',b:'#1d3f7a',p:'#e9c46a'})); // агент Аливарии
+const RBOTTLE=spr(["..y..",".rRr.",".rRr.","rRRRr","rRwRr","rRwRr","rRRRr",".rrr."],{y:'#ddd',r:'#4a2a0a',R:'#7a4a12',w:'#1d3f7a'});
 
 function famPerson(o){
   const W=16,g=[];const row=s=>g.push(s.padEnd(W,'.').slice(0,W).split(''));
@@ -406,7 +406,7 @@ TS.hyper.barL=tileCanvas(x=>pallet(x,0));TS.hyper.barR=tileCanvas(x=>pallet(x,1)
 
 // ================== темы и фон ==================
 const THEMES=[
- {name:'Склад завода',kind:'brew',sky:['#2d1a12','#5a3320'],wall:'#6a2e20',wall2:'#4c1f15',tank:'#c27a3a',tank2:'#8e5426'},
+ {name:'Раковский Бровар',kind:'brew',sky:['#2d1a12','#5a3320'],wall:'#6a2e20',wall2:'#4c1f15',tank:'#c27a3a',tank2:'#8e5426'},
  {name:'Трасса',kind:'road'},
  {name:'Магазин «У дома»',kind:'shop',sky:['#1f5560','#143a42'],top:'#0e2a30',rack:'#5a3a22',back:'#7a5634',plank:'#3e2614'},
  {name:'Гипермаркет',kind:'hyper'},
@@ -432,16 +432,19 @@ function buildBG(th){
         else if(kind===3){F('#cfe8f0',x,base-9,6,8);F(['#b5651d','#c0392b','#e9c46a','#6a994e'][Math.floor(rnd()*4)],x+1,base-7,4,6);F('#d62828',x,base-11,6,2);x+=7;} // банки-соленья
         else{F(c,x,base-6,9,6);F('#ffffff55',x,base-6,9,1);x+=10;}  // пачки
       }}
-    const types=['shelf','fridge','shelf','fruit','shelf','bread','promo','fridge'];
+    const BR={rak:{bg:'#a3202a',fg:'#f4ead2',t:'РАКОВСКИЙ',lab:'#c0262d'},ali:{bg:'#1d3f7a',fg:'#e9c46a',t:'АЛИВАРИЯ',lab:'#2d5fa8'}};
+    function brandGoods(x0,x1,base,b){for(let x=x0;x<x1-4;x+=5){F('#7a4a12',x,base-12,4,12);F('#7a4a12',x+1,base-15,2,3);F('#ddd',x+1,base-16,2,1);F(b.lab,x,base-8,4,3);F(b.fg,x+1,base-7,2,1);}}
+    const types=['shelf','fridge','shelf','fruit','shelf','bread','promo','fridge'],brandOf={0:'rak',2:'ali'};
     for(let i=0;i<8;i++){const ox=i*72,t=types[i];
-      if(t==='shelf'){F(th.rack||'#b8bec6',ox+4,70,64,122);F(th.back||'#e8ebef',ox+7,72,58,120);
-        for(let sy=96;sy<192;sy+=26){F(th.plank||'#9aa1a8',ox+6,sy,60,3);goods(ox+8,ox+64,sy);}
+      if(t==='shelf'){F(th.rack||'#b8bec6',ox+4,70,64,122);F(th.back||'#e8ebef',ox+7,72,58,120);const bb=BR[brandOf[i]];
+        for(let sy=96;sy<192;sy+=26){F(th.plank||'#9aa1a8',ox+6,sy,60,3);if(bb)brandGoods(ox+8,ox+64,sy,bb);else goods(ox+8,ox+64,sy);}
+        if(bb){F(bb.fg,ox+6,74,60,12);F(bb.bg,ox+7,75,58,10);mx.fillStyle=bb.fg;mx.font='bold 7px sans-serif';mx.textAlign='center';mx.fillText(bb.t,ox+36,83);}
         F('#ffffff22',ox+7,72,58,6);F('#ffd23f',ox+20,99,10,5);F('#d62828',ox+22,100,6,1);}
       else if(t==='fridge'){F('#2b2f38',ox+4,64,64,128);F('#bfe9ff',ox+7,67,58,4);
         for(const dx of [7,36]){F('#16324a',ox+dx,72,29,112);for(let sy=92;sy<184;sy+=22){F('#5a6b7a',ox+dx,sy,29,2);
           for(let x=ox+dx+2;x<ox+dx+27;x+=5){const g=['#2f6b2a','#7a4a12','#c98f00'][Math.floor(rnd()*3)];F(g,x,sy-11,4,11);F(g,x+1,sy-14,2,3);F('#ffd23f',x+1,sy-15,2,1);}}
           F('#bfe9ff33',ox+dx+2,74,4,108);F('#9aa1a8',ox+dx+(dx===7?25:2),120,2,14);}
-        F('#7fd3ff',ox+20,56,32,8);mx.fillStyle='#0d2233';mx.font='bold 7px sans-serif';mx.textAlign='center';mx.fillText('ПИВО ❄',ox+36,63);}
+        {const fb=i===1?BR.rak:BR.ali;F(fb.fg,ox+6,54,60,11);F(fb.bg,ox+7,55,58,9);mx.fillStyle=fb.fg;mx.font='bold 6px sans-serif';mx.textAlign='center';mx.fillText(fb.t+' ❄',ox+36,62);}}
       else if(t==='fruit'){for(let r=0;r<3;r++){const y=148+r*15;F('#8a5a2b',ox+6+r*3,y,60-r*6,14);F('#6b4226',ox+6+r*3,y+12,60-r*6,2);
           const fc=['#e63946','#f4a261','#f1c40f','#6a994e','#ff8fab'][Math.floor(rnd()*5)];
           for(let x=ox+9+r*3;x<ox+62-r*3;x+=5){mx.fillStyle=fc;mx.beginPath();mx.arc(x+2,y+1,2.6,0,7);mx.fill();}}
@@ -451,7 +454,7 @@ function buildBG(th){
         F('#ffffff',ox+18,84,36,11);mx.fillStyle='#222';mx.font='bold 7px sans-serif';mx.textAlign='center';mx.fillText('ХЛЕБ',ox+36,93);}
       else{ // пирамида ящиков пива
         for(let r=0;r<4;r++)for(let k=0;k<4-r;k++){const x=ox+8+r*7+k*14,y=178-r*12;F('#a3202a',x,y,13,12);F('#d6303a',x+1,y+1,11,9);F('#7a141c',x+4,y+4,5,2);}
-        F('#ffd23f',ox+14,112,44,22);F('#d62828',ox+14,112,44,6);mx.fillStyle='#fff';mx.font='bold 6px sans-serif';mx.textAlign='center';mx.fillText('АКЦИЯ',ox+36,117);
+        F('#ffd23f',ox+12,112,48,22);F('#a3202a',ox+12,112,48,7);mx.fillStyle='#fff';mx.font='bold 5px sans-serif';mx.textAlign='center';mx.fillText('РАКОВСКИЙ',ox+36,118);
         mx.fillStyle='#d62828';mx.font='bold 10px sans-serif';mx.fillText('-20%',ox+36,131);}
     }
     BG={wall:w,mid:m};return;
@@ -475,7 +478,9 @@ function buildBG(th){
         for(let px=ox+10;px<ox+114;px+=36){const hh=20+Math.floor(rnd()*14),bc=box[Math.floor(rnd()*4)];
           F('#8a6a3a',px,by-3,32,3);for(let yy=by-3-hh;yy<by-3;yy+=8)for(let xx=px;xx<px+32;xx+=11)F(bc,xx,yy,10,7);
           if(rnd()<.5)F(wrap[Math.floor(rnd()*5)],px+2,by-3-hh+2,28,3);F('#ffffff22',px+1,by-3-hh,2,hh);}}
-      F('#2d5fa8',ox+4,56,119,3);}
+      F('#2d5fa8',ox+4,56,119,3);
+      if(i===0||i===3){const rk=i===0;F(rk?'#e9c46a':'#e9c46a',ox+20,58,88,16);F(rk?'#a3202a':'#1d3f7a',ox+21,59,86,14);
+        mx.fillStyle=rk?'#f4ead2':'#e9c46a';mx.font='bold 8px sans-serif';mx.textAlign='center';mx.fillText(rk?'РАКОВСКИЙ БРОВАР':'АЛИВАРИЯ',ox+64,69);}}
     // тележки
     for(let k=0;k<4;k++){const x=300+k*7;F('#9aa1a8',x,176,14,10);F('#d9dde2',x+2,178,10,1);F('#111',x+2,188,3,3);F('#111',x+10,188,3,3);}
     BG={wall:w,mid:m};return;
@@ -520,6 +525,9 @@ function buildBG(th){
     if(th.steam){mx.fillStyle='#8a8f97';mx.fillRect(ox+wid/2-3,top-26,6,14);}
   }
   mx.fillStyle='#8a8f97';mx.fillRect(0,40,320,5);mx.fillRect(96,40,5,120);mx.fillStyle='#b9bec5';mx.fillRect(0,40,320,1);
+  for(const [ox,wid,top] of tanks){mx.fillStyle='#f4ead2';mx.fillRect(ox+wid/2-20,top+34,40,10);mx.fillStyle='#a3202a';mx.font='bold 6px sans-serif';mx.textAlign='center';mx.fillText('РАКОВСКИЙ',ox+wid/2,top+41);}
+  mx.fillStyle='#8a8f97';mx.fillRect(130,45,2,7);mx.fillRect(222,45,2,7);mx.fillStyle='#e9c46a';mx.fillRect(108,52,138,26);mx.fillStyle='#a3202a';mx.fillRect(110,54,134,22);
+  mx.fillStyle='#f4ead2';mx.font='bold 11px sans-serif';mx.textAlign='center';mx.fillText('РАКОВСКИЙ БРОВАР',177,69);
   BG={wall:w,mid:m,tanks};
 }
 
@@ -760,10 +768,10 @@ function goTitle(){$('o-gift').classList.remove('show');setRoadUI(false);state='
   document.body.classList.remove('fin','bossOn');$('cap').classList.remove('show');$('banner').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');}
 function togglePause(){if(state==='play'){state='pause';showOv('o-pause');}else if(state==='pause'){state='play';showOv(null);}}
 const CALLS=[
- ['📞 Звонит начальник','С днём рож… кхм. Срочный заказ! Пять точек без пива, всё развезти до 19:00. Начни со склада — без трёх накладных кладовщик не выпустит!'],
+ ['📞 Звонит начальник','С днём рож… кхм. Срочный заказ! Пять точек без пива, всё развезти до 19:00. Начни со склада «Раковского Бровара» — без трёх накладных кладовщик не выпустит!'],
  ['📞 Начальник','Груз в багажнике? Гони в магазин «У дома». И осторожно — на трассе гаишник очень любит белые Kia Rio!'],
  ['📞 Начальник','Заведующая там строгая: «Где сертификаты?!» Без подписи на накладной не уезжай!'],
- ['📞 Начальник','Теперь гипермаркет. Говорят, агент конкурентов заставил наши полки своим пивом. Разберись!'],
+ ['📞 Начальник','Теперь гипермаркет. Говорят, агент Аливарии заставил наши полки своим пивом. Верни место «Раковскому»!'],
  ['😱 А где машина?!','Пока ты отвоёвывал полки, белую Kia Rio увозит эвакуатор! Догоняй его по крышам гаражей!'],
  ['📞 Звонят из дома','Ты где? Заказ сдал? Давай скорее домой, на Логойский тракт, 33! 🏠']];
 function showCall(i){state='call';timer=.5;const c=CALLS[Math.min(i,CALLS.length-1)];$('cw').textContent=c[0];$('ct').textContent=c[1];showOv('o-call');snd('paper');
@@ -804,7 +812,7 @@ function startLevel(){
       enemies.push(Object.assign({t:e.t,x:px+(16-D.w)/2,y:e.t==='egg'?py+5:py+T-D.h,vy:0,alive:true,act:false,anim:0},D));}
     else if(e.t==='boss'){
       boss=lvl===2?{kind:'zav',name:'Придирчивая заведующая',x:px,y:12*T-44,w:26,h:44,hp:8,maxHp:8}
-          :lvl===3?{kind:'rival',name:'Агент конкурентов',x:px,y:12*T-44,w:26,h:44,hp:9,maxHp:9}
+          :lvl===3?{kind:'rival',name:'Агент Аливарии',x:px,y:12*T-44,w:26,h:44,hp:9,maxHp:9}
                   :{kind:'tow',name:'Эвакуатор',x:px-48,y:12*T-40,w:84,h:40,hp:7,maxHp:7,mode:'wait',wt:1.6};
       Object.assign(boss,{vx:0,vy:0,alive:true,inv:0,jt:2,st:2.5,ct:1.5,dash:4,dashT:0,face:-1,on:false,dt:0});
     }
@@ -933,7 +941,7 @@ function update(dt){
   // арена босса
   const A=L.arena;
   if(A&&!A.locked&&h.x>(A.x0+1)*T){A.locked=true;for(let y=0;y<12;y++)L.g[y][A.x0-1]='G';snd('gate');banner(boss.name,2.5);
-    caption(boss.kind==='zav'?'«Где сертификаты?! Не приму!»':boss.kind==='rival'?'«Это теперь мои полки!»':'Прыгай на эвакуатор сверху! 🚚',2.6);if(boss.kind==='tow')snd('honk');hud();}
+    caption(boss.kind==='zav'?'«Где сертификаты?! Не приму!»':boss.kind==='rival'?'«Теперь здесь только Аливария!»':'Прыгай на эвакуатор сверху! 🚚',2.6);if(boss.kind==='tow')snd('honk');hud();}
   if(A&&A.locked){const lo=(A.x0-1)*T,hi=(A.x1+1)*T-VW;cam=hi<lo?(lo+hi)/2:Math.max(lo,Math.min(hi,h.x-VW/2));}
   else{cam=Math.max(cam,Math.min(h.x-VW*.4,L.w*T-VW));cam=Math.max(0,cam);}
   // монеты и накладные
@@ -1087,7 +1095,7 @@ function updBoss(dt){
     b.jt-=dt;if(b.jt<=0&&b.on){b.vy=-440;b.jt=1.6+Math.random();}
     b.ct-=dt;if(b.ct<=0){b.ct=b.hp<=4?.9:1.3;eproj.push({k:'rb',x:b.x+b.w/2,y:b.y+8,w:5,h:7,vx:dir*(120+Math.random()*80),vy:-300-Math.random()*100});snd('throw');}
     b.st-=dt;if(b.st<=0){b.st=b.hp<=4?3:4.2;
-      enemies.push({t:'r',x:b.x+(dir>0?b.w:-16),y:12*T-16,w:16,h:16,vx:dir*100,vy:0,alive:true,act:true,anim:0,life:6});caption('«Выкладка конкурентов!»',1.2);}
+      enemies.push({t:'r',x:b.x+(dir>0?b.w:-16),y:12*T-16,w:16,h:16,vx:dir*100,vy:0,alive:true,act:true,anim:0,life:6});caption('«Выкладка Аливарии!»',1.2);}
   } else { // эвакуатор
     if(b.mode==='wait'){b.vx*=Math.max(0,1-dt*6);b.wt-=dt;b.face=dir;
       if(b.wt<=0){b.mode='ram';b.vx=b.face*(b.hp<=3?260:200);snd('honk');}}
@@ -1108,7 +1116,7 @@ function updBoss(dt){
 const CUTTXT={
  crate:{start:'Накладные 3/3 — кладовщик отпускает! 📄✅',pick:'Берём ящики с пивом!',load:'Ящики — в багажник белой Kia Rio!',go:'Поехали развозить! 🚗'},
  doc:{start:'Заведующая сдалась! Накладная подписана ✍️',pick:'Забираем подписанную накладную!',load:'Документы — в бардачок!',go:'Дальше — гипермаркет! 🚗'},
- exit:{start:'Конкурент повержен! Полка снова наша! 🍺'},
+ exit:{start:'Агент Аливарии повержен! Полка снова «Раковская»! 🍺'},
  tow:{start:'Эвакуатор остановлен! Kia Rio спасена! 🚗',go:'Домой! 🏠'}};
 function startCut(kind){
   const A=L.arena;state='cut';
@@ -1240,7 +1248,8 @@ function drawDock(){
   RR('#26282d',x-6,base-78,92,78);RR('#3b3f46',x-2,base-74,84,74);
   for(let i=0;i<84;i+=6)RR('#2f3238',x-2+i,base-74,2,74);
   for(let i=0;i<92;i+=12){RR(i%24?'#e0a821':'#222',x-6+i,base-84,12,6);}
-  RR('#ffd23f',x+16,base-104,50,16);ctx.fillStyle='#222';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('ОТГРУЗКА',x+41,base-93);
+  RR('#e9c46a',x-6,base-114,94,28);RR('#a3202a',x-4,base-112,90,24);ctx.fillStyle='#f4ead2';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('РАКОВСКИЙ БРОВАР',x+41,base-102);
+  ctx.fillStyle='#ffd23f';ctx.font='bold 7px sans-serif';ctx.fillText('ОТГРУЗКА',x+41,base-92);
   for(const [a,b] of [[46,12],[62,12],[54,24],[70,24],[30,12]])drawLoot('crate',x+a,base-b);
   if(!cut)drawLoot('crate',L.dock*T-cam,base-12);
 }
@@ -1315,7 +1324,7 @@ function drawBoss(b){
   if(b.alive&&b.inv>0&&Math.floor(time*20)%2)ctx.globalAlpha=.4;
   if(b.kind==='tow')drawTow(x,y+b.h,b.face,!b.empty);
   else{ctx.drawImage((b.kind==='zav'?ZAV:RIV)[b.face>0?1:0],x-7,y,40,44);
-    if(b.kind==='rival'){RR('#c0262d',x+1,y-2,22,4);RR('#c0262d',b.face>0?x+18:x-4,y+1,10,2);}
+    if(b.kind==='rival'){RR('#1d3f7a',x+1,y-2,22,4);RR('#e9c46a',x+1,y+1,22,1);RR('#1d3f7a',b.face>0?x+18:x-4,y+1,10,2);}
     if(b.dashT>0){ctx.fillStyle='#fff8';ctx.fillRect(x+(b.face>0?-10:b.w+4),y+20,6,1);ctx.fillRect(x+(b.face>0?-14:b.w+8),y+26,8,1);}}
   ctx.restore();
 }
@@ -1412,7 +1421,7 @@ function draw(){
   if(th.steam&&BG.tanks){for(let k=-1;k<VW/m+1;k++)for(const [ox,wid,top] of BG.tanks){const bx=Math.floor(k*m-((cam*.55)%m)+ox+wid/2);
       for(let i=0;i<4;i++){const ph=(time*.6+i/4+ox*.01)%1;ctx.fillStyle='rgba(240,244,248,'+(.35*(1-ph))+')';ctx.beginPath();ctx.arc(bx+Math.sin(ph*6+i)*4,top-26-ph*50,3+ph*9,0,7);ctx.fill();}}}
   if(th.kind==='brew'&&!th.steam){const cy=150,off=(time*20+cam*.55)%24;ctx.fillStyle='#2b2b30';ctx.fillRect(0,cy+12,VW,6);
-    for(let x=-off;x<VW;x+=24){ctx.fillStyle='#3d6b2e';ctx.fillRect(Math.floor(x)+8,cy,5,12);ctx.fillRect(Math.floor(x)+9,cy-4,3,4);ctx.fillStyle='#ffd23f';ctx.fillRect(Math.floor(x)+9,cy-5,3,1);}}
+    for(let x=-off;x<VW;x+=24){ctx.fillStyle='#3d6b2e';ctx.fillRect(Math.floor(x)+8,cy,5,12);ctx.fillRect(Math.floor(x)+9,cy-4,3,4);ctx.fillStyle='#ffd23f';ctx.fillRect(Math.floor(x)+9,cy-5,3,1);ctx.fillStyle='#c0262d';ctx.fillRect(Math.floor(x)+8,cy+5,5,3);}}
   const t0=Math.floor(cam/T),t1=Math.ceil((cam+VW)/T);
   for(let ty=0;ty<ROWS;ty++)for(let tx=t0;tx<=t1;tx++){
     const c=tile(tx,ty);if(c===' ')continue;
