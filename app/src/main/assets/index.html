@@ -761,7 +761,7 @@ const CALLS=[
  ['📞 Начальник','Заведующая там строгая: «Где сертификаты?!» Без подписи на накладной не уезжай!'],
  ['📞 Начальник','Теперь гипермаркет. Говорят, агент конкурентов заставил наши полки своим пивом. Разберись!'],
  ['😱 А где машина?!','Пока ты отвоёвывал полки, белую Kia Rio увозит эвакуатор! Догоняй его по крышам гаражей!'],
- ['📞 Звонят из дома','Ты где? Заказ сдал? Давай скорее домой! 🏠']];
+ ['📞 Звонят из дома','Ты где? Заказ сдал? Давай скорее домой, на Логойский тракт, 33! 🏠']];
 function showCall(i){state='call';timer=.5;const c=CALLS[Math.min(i,CALLS.length-1)];$('cw').textContent=c[0];$('ct').textContent=c[1];showOv('o-call');snd('paper');
   $('hud').style.display='none';$('bossbar').style.display='none';$('cap').classList.remove('show');}
 function nextStage(){lvl++;cpIdx=-1;if(lvl>=STAGES)showCall(STAGES);else showCall(lvl);}
@@ -1048,6 +1048,7 @@ function updRoad(dt){
       if(cop.watch&&!god){snd('whistle');caption('👮 «Стоп! Ваши документы!» — сдай назад и жди момент',2.4);c.x=px-330;c.v=0;c.hold=.8;shake=.2;}
       else{cop.i++;snd('coin');addScore(500,c.x+60,c.ly-40);caption(cop.i<3?'Проскочил! '+cop.i+'/3':'Гаишник остался ни с чем! 😎',2);if(cop.i<3){cop.watch=true;cop.t=1.2+Math.random()*.8;}}}}
   else if(c.x>L.end-260){L.arrive=true;L.arriveT=0;caption('Магазин «У дома» 🏪 — приехали!',2.5);snd('clear');addScore(1000);}
+  L.mi=L.mi||0;if(L.mi<MARKS.length&&c.x+120>MARKS[L.mi].x){caption(MARKS[L.mi].t,2.2);L.mi++;}
   cam=Math.max(0,c.x-VW*.22);
 }
 
@@ -1128,7 +1129,7 @@ const PARTY_LINES=['Мы весь день готовили тебе празд�
 function startParty(){
   unlock(STAGES);state='party';party={t:0,lit:false,line:-1,said:false,inside:false,door:false};fade=0;cam=0;parts=[];pops=[];L=null;
   $('hud').style.display='none';$('bossbar').style.display='none';Z.t.classList.add('hide');setRoadUI(false);document.body.classList.add('fin');showOv(null);
-  caption('Наконец-то домой… 🏠',2.4);snd('engine');
+  caption('Логойский тракт, 33 — наконец-то домой… 🏠',2.6);snd('engine');
 }
 function updParty(dt){
   const p=party;p.t+=dt;
@@ -1302,6 +1303,40 @@ function drawFx(){
     else{ctx.fillStyle='#000';ctx.fillText(p.s,Math.floor(p.x-cam)+1,Math.floor(p.y)+1);ctx.fillStyle='#fff';ctx.fillText(p.s,Math.floor(p.x-cam),Math.floor(p.y));}}
   ctx.globalAlpha=1;
 }
+// ---------- места Минска вдоль трассы (по порядку) ----------
+const MARKS=[{x:900,t:'📍 Район Зелёный Луг'},{x:3200,t:'📍 Рынок «Экспобел»'},{x:5100,t:'📍 Цнянка'},{x:6800,t:'📍 Улица Карбышева'}];
+function roadSign(x,txt){const w=Math.max(52,txt.length*6+10);RR('#9aa1a8',x+w/2-1,104,2,34);RR('#ffffff',x-1,84,w+2,22);RR('#1d4e89',x,85,w,20);
+  ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(txt,x+w/2,98);}
+function drawMarks(){
+  const vis=(a,b)=>b-cam>-60&&a-cam<VW+60;
+  // Зелёный Луг: многоэтажки и дворы с деревьями
+  if(vis(900,2700)){roadSign(900-cam,'Зелёный Луг');
+    const cols=['#d9d2c4','#c9d6df','#e9dcc0','#cfd8c4'];
+    for(let i=0;i<6;i++){const bx=Math.round(1000+i*270-cam),h=96+(i%3)*14,w=92;if(bx<-120||bx>VW+20)continue;
+      RR('#8a8f99',bx-2,138-h-3,w+4,3);RR(cols[i%4],bx,138-h,w,h);
+      for(let fy=138-h+6;fy<132;fy+=10)for(let fx=bx+5;fx<bx+w-6;fx+=11){RR(((fx+fy)%3)?'#5a7a96':'#ffe9a8',fx,fy,7,6);}
+      for(let fy=138-h+12;fy<132;fy+=10)RR('#00000018',bx,fy,w,1);
+      const tx=bx+w+18;ctx.fillStyle='#3f8a3a';ctx.beginPath();ctx.arc(tx,116,14,0,7);ctx.fill();ctx.fillStyle='#4fa04a';ctx.beginPath();ctx.arc(tx+16,120,11,0,7);ctx.fill();
+      RR('#5a3a22',tx-1,124,3,14);RR('#5a3a22',tx+15,126,3,12);}}
+  // рынок «Экспобел»
+  if(vis(3200,4500)){const x=Math.round(3300-cam);roadSign(3200-cam,'Экспобел');
+    RR('#e8e4da',x,62,300,76);RR('#cfc9bb',x,62,300,4);RR('#c0262d',x+70,44,160,22);RR('#ffffff',x+72,46,156,2);
+    ctx.fillStyle='#fff';ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.fillText('ЭКСПОБЕЛ',x+150,61);
+    for(let i=0;i<9;i++)RR('#8fd3ff',x+10+i*32,74,22,26);RR('#5a3a22',x+136,104,28,34);
+    for(let i=0;i<6;i++){const tx=x+12+i*48;for(let k=0;k<5;k++)RR(k%2?'#ffffff':(i%2?'#2d5fa8':'#d62828'),tx+k*7,112,7,6);RR('#9aa1a8',tx,118,2,20);RR('#9aa1a8',tx+33,118,2,20);
+      RR(['#f4a261','#e9c46a','#6a994e','#e76f51'][i%4],tx+4,128,28,10);}}
+  // Цнянка: водохранилище, камыши, лодка, дома вдали
+  if(vis(5100,6500)){roadSign(5100-cam,'Цнянка');const x=Math.round(5200-cam);
+    for(let i=0;i<8;i++)RR('#b7c4d1',x+20+i*150,66+(i%2)*8,60,48);
+    RR('#4a90c8',x,112,1200,26);for(let i=0;i<40;i++)RR('#9fd3ff',x+((i*61+time*20)%1200),116+(i%4)*5,10,1);
+    for(let i=0;i<30;i++)RR('#6b8f3a',x+i*40+(i%3)*7,104+(i%2)*3,2,12);
+    const bx=x+420+Math.sin(time)*10;RR('#ffffff',bx,118,22,5);RR('#8a5a2b',bx+2,123,18,3);RR('#ddd',bx+10,98,1,20);ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(bx+11,98);ctx.lineTo(bx+22,116);ctx.lineTo(bx+11,116);ctx.fill();}
+  // улица Карбышева
+  if(vis(6800,7800)){roadSign(6800-cam,'ул. Карбышева');
+    for(let i=0;i<3;i++){const bx=Math.round(6900+i*260-cam),h=84+i*10;RR('#c9b8a0',bx,138-h,200,h);RR('#a8977f',bx,138-h,200,3);
+      for(let fy=138-h+8;fy<130;fy+=12)for(let fx=bx+8;fx<bx+192;fx+=16)RR(((fx*7+fy)%5)?'#5a7a96':'#ffe9a8',fx,fy,9,8);
+      RR('#1d4e89',bx+12,138-h+4,60,10);ctx.fillStyle='#fff';ctx.font='bold 6px sans-serif';ctx.textAlign='center';ctx.fillText('ул. Карбышева',bx+42,138-h+11);}}
+}
 function drawRoad(){
   const c=L.car,cop=L.cop;
   ctx.save();if(shake>0)ctx.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*4));
@@ -1310,6 +1345,7 @@ function drawRoad(){
   for(let x=-((cam*.4)%m);x<VW;x+=m)ctx.drawImage(BG.mid,Math.floor(x),0);
   const sx=Math.round(L.end-80-cam);if(sx>-200&&sx<VW+20){RR('#e9e4d6',sx,48,170,90);RR('#2a9d8f',sx,48,170,22);ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('МАГАЗИН «У ДОМА»',sx+85,63);
     RR('#8fd3ff',sx+12,82,50,34);RR('#8fd3ff',sx+108,82,50,34);RR('#5a3a22',sx+72,88,26,50);RR('#ffd23f',sx+92,112,2,3);}
+  drawMarks();
   RR('#b9b4a8',0,138,VW,12);for(let x=-(cam%24);x<VW;x+=24)RR('#a39e92',Math.floor(x),138,1,12);
   RR('#4a4d55',0,150,VW,67);RR('#3d4047',0,150,VW,3);
   RR('#f2f2f2',0,169,VW,1);RR('#f2f2f2',0,172,VW,1);
@@ -1423,6 +1459,7 @@ function drawHouseOutside(p){
   ctx.fillStyle='#5a2a20';ctx.beginPath();ctx.moveTo(hx-12,86);ctx.lineTo(hx+85,40);ctx.lineTo(hx+182,86);ctx.fill();
   for(const wx of [hx+14,hx+120]){RR('#1b2238',wx,108,34,30);RR('#efe9df',wx+16,108,2,30);RR('#efe9df',wx,122,34,2);}
   RR('#4a2c1a',hx+70,140,28,52);RR('#ffd23f',hx+92,166,2,3);
+  RR('#ffffff',hx+51,113,68,22);RR('#1d4e89',hx+52,114,66,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 6px sans-serif';ctx.fillText('ЛОГОЙСКИЙ ТРАКТ',hx+85,122);ctx.font='bold 9px sans-serif';ctx.fillText('33',hx+85,132);
   if(p.door&&p.t>4)RR('#000',hx+70,140,28,52);
   RR('#3a3d44',0,192,VW,32);RR('#55585f',0,192,VW,2);
   const cx=Math.min(VW*.12,-90+p.t*110)|0;drawCar(Math.max(-90,cx),196,p.t*20,p.t<2.3);
