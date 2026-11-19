@@ -21,6 +21,15 @@ Android-приложение, внутри которого HTML5-игра (`app
 что стоит в шаблонах Code on the Go, а в `gradle/wrapper/gradle-wrapper.properties`
 укажите подходящую версию Gradle.
 
+## Версия для iPhone (через браузер)
+
+Игра работает как веб-приложение: открыть ссылку в **Safari** → «Поделиться» → **«На экран „Домой“»**.
+Появится иконка «Агент 0,5», игра запускается на весь экран и работает без интернета.
+
+Сайт лежит в папке `docs/` (её делает скрипт `./make_web.sh` из `app/src/main/assets`).
+Включить один раз: репозиторий **публичный**, затем Settings → Pages → Source: *Deploy from a branch*,
+ветка `ccr-cb63154d-kb71yt`, папка `/docs` → Save. Ссылка: https://mishpip31-droid.github.io/Beer-Dealer/
+
 ## Готовый APK с GitHub
 
 При каждом пуше GitHub Actions собирает APK (workflow **Build APK**).
