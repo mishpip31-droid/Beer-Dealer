@@ -654,9 +654,9 @@ function buildBike(){
   const ramp=(len,d,gap,drop)=>{const h0=h;put(len,t=>h0+d*t);h=h0+d;x+=gap;h=Math.min(204,h+drop);};
   const cps=[];
   flat(320);hill(240,-28);flat(80);bumps(200);hill(260,-40);hill(260,36);slope(220,-36);flat(70);
-  ramp(80,-22,60,34);flat(160);cps.push(x-80);
+  ramp(80,-22,60,34);flat(160);cps.push(x-115);
   hill(220,-48);hill(220,-56);hill(300,46);bumps(240);slope(260,-56);flat(60);slope(160,48);
-  ramp(90,-26,80,40);flat(140);cps.push(x-70);
+  ramp(90,-26,80,40);flat(140);cps.push(x-130);
   for(let i=0;i<5;i++)slope(26,-9);flat(50);hill(300,-62);hill(220,54);ramp(70,-20,64,24);flat(60);
   hill(260,-40);bumps(220);slope(200,30);flat(500);
   const end=x-260,w=x;
@@ -666,8 +666,9 @@ function buildBike(){
   for(const k of [1500,3600,5400])water.push({x:k,y:(G[k]||170)-18,got:false});
   return {bike:true,G,end,w:Math.ceil(w/T)+2,bcps:cps,cr,water,g:[],ents:[],vents:[],cps:[],arrive:false,arriveT:0};
 }
+function slopeAt(x){const a=gAt(x-2),b=gAt(x+2),c=gAt(x);if(!isNaN(a)&&!isNaN(b))return (b-a)/4;if(!isNaN(b)&&!isNaN(c))return (b-c)/2;if(!isNaN(a)&&!isNaN(c))return (c-a)/2;return 0;}
 function gAt(x){x=Math.round(x);if(x<0)return L.G[0];if(x>=L.G.length)return L.G[L.G.length-1];return L.G[x];}
-function bikeSpawn(cx){let gx=cx;while(isNaN(gAt(gx)))gx-=4;const b={w1:{},w2:{},inv:1,boost:0,wheel:0,ped:0,crashT:0};
+function bikeSpawn(cx){let gx=cx;const ok=x=>!isNaN(gAt(x-BWB/2-6))&&!isNaN(gAt(x+BWB/2+6));let k=0;while(!ok(gx)&&k<400){gx+=2;k++;}if(!ok(gx)){gx=cx;while(!ok(gx)&&gx>40)gx-=2;}const b={w1:{},w2:{},inv:1,boost:0,wheel:0,ped:0,crashT:0};
   for(const [w,o] of [[b.w1,-BWB/2],[b.w2,BWB/2]]){w.x=gx+o;w.y=(isNaN(gAt(w.x))?gAt(gx):gAt(w.x))-BR;w.px=w.x;w.py=w.y;w.on=true;}
   return b;}
 function bikeCrash(msg){const b=L.b;if(god){const c=L.cpX||60;L.b=bikeSpawn(c);return;}
@@ -685,7 +686,7 @@ function updBike(dt){
   const speed=Math.hypot((w1.x-w1.px+w2.x-w2.px)/2,(w1.y-w1.py+w2.y-w2.py)/2)/dt;
   const maxV=b.boost>0?300:220;
   if(ctrl){
-    if(K.r){if(w1.on){const s=(gAt(w1.x+2)-gAt(w1.x-2))/4,tl=Math.hypot(1,s)||1;if(speed<maxV)vAdd(w1,520/tl,520*s/tl);vAdd(w2,-px*260,-py*260);b.ped+=dt*10;}
+    if(K.r){if(w1.on){const s=slopeAt(w1.x),tl=Math.hypot(1,s)||1;if(speed<maxV)vAdd(w1,520/tl,520*s/tl);const wh=80+650*Math.max(0,-s);vAdd(w2,-px*wh,-py*wh);b.ped+=dt*10;}
       else{vAdd(w1,px*900,py*900);vAdd(w2,-px*900,-py*900);}}
     if(K.l){if(w1.on||w2.on){for(const w of [w1,w2]){w.px+=(w.x-w.px)*4*dt;w.py+=(w.y-w.py)*4*dt*.2;}}
       else{vAdd(w1,-px*900,-py*900);vAdd(w2,px*900,py*900);}}
@@ -696,8 +697,8 @@ function updBike(dt){
   for(let it=0;it<4;it++){
     dx=w2.x-w1.x;dy=w2.y-w1.y;d=Math.hypot(dx,dy)||1;const df=(d-BWB)/d/2;w1.x+=dx*df;w1.y+=dy*df;w2.x-=dx*df;w2.y-=dy*df;
     for(const w of [w1,w2]){w.on=false;const gy=gAt(w.x);if(isNaN(gy))continue;
-      if(w.y+BR>gy&&w.y+BR-gy<18){w.y=gy-BR;w.on=true;
-        const s=(gAt(w.x+2)-gAt(w.x-2))/4,nl=Math.hypot(s,1),nx=s/nl,ny=-1/nl; // нормаль наружу
+      if(w.y+BR>gy-.8&&w.y+BR-gy<18){if(w.y+BR>gy)w.y=gy-BR;w.on=true;
+        const s=slopeAt(w.x),nl=Math.hypot(s,1),nx=s/nl,ny=-1/nl; // нормаль наружу
         let vx=w.x-w.px,vy=w.y-w.py;const vn=vx*nx+vy*ny;if(vn<0){vx-=nx*vn*1.05;vy-=ny*vn*1.05;}w.px=w.x-vx;w.py=w.y-vy;}}
   }
   const cx=(w1.x+w2.x)/2,cy=(w1.y+w2.y)/2;dx=w2.x-w1.x;dy=w2.y-w1.y;d=Math.hypot(dx,dy)||1;
