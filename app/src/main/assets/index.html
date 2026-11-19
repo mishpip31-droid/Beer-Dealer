@@ -26,6 +26,8 @@ html,body{margin:0;height:100%;background:#1a0f0a;overflow:hidden;touch-action:n
 #zr{left:calc(3vw + 21vh);bottom:5vh;width:18vh;height:18vh}
 #zj{right:4vw;bottom:5vh;width:22vh;height:22vh}
 #zt{right:calc(4vw + 25vh);bottom:4vh;width:17vh;height:17vh;font-size:6vh}
+#zu{right:calc(4vw + 25vh);bottom:calc(5vh + 17vh);width:15vh;height:15vh;font-size:6vh}
+#zd{right:calc(4vw + 25vh);bottom:4vh;width:15vh;height:15vh;font-size:6vh}
 .ib{position:absolute;top:6px;width:42px;height:42px;border-radius:10px;background:#0006;border:2px solid #fff5;color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;z-index:5}
 #bm{right:10px}#bp{right:60px}
 #bossbar{position:absolute;top:44px;left:50%;transform:translateX(-50%);width:min(60vw,420px);display:none;color:#fff;font-weight:800;text-align:center;font-size:clamp(12px,3.6vh,20px);text-shadow:0 2px 0 #000c;pointer-events:none}
@@ -55,7 +57,7 @@ body.fin #cap{top:auto;bottom:6vh}
 <div id="hud"><span id="hc">🟡 ×0</span><span id="hs">★ 0</span><span id="hl">❤ ×3</span><span id="hv">Цех 1</span></div>
 <div id="bossbar"><div id="bn">Босс</div><div class="bg"><div class="fill" id="bf"></div></div></div>
 <div id="cap"></div><div id="banner"></div>
-<div class="zone" id="zl">◀</div><div class="zone" id="zr">▶</div><div class="zone" id="zj">▲</div><div class="zone hide" id="zt">🍾</div>
+<div class="zone" id="zl">◀</div><div class="zone" id="zr">▶</div><div class="zone" id="zj">▲</div><div class="zone hide" id="zt">🍾</div><div class="zone hide" id="zu">▲</div><div class="zone hide" id="zd">▼</div>
 <div class="ib" id="bp">⏸</div><div class="ib" id="bm">🔊</div>
 
 <div class="ov" id="o-title">
@@ -399,20 +401,24 @@ function buildLevel(n){
 }
 
 // ================== трасса ==================
-const GY=208;
+const GY=216,LY=[186,201,216]; // линии колёс трёх полос: дальняя, средняя, ближняя
 function buildRoad(){
   const rnd=mulberry(4242),obs=[],cr=[];let x=700;
-  while(x<7700){const r=rnd(),p=x/7700;
-    if(r<.36)obs.push({t:'pit',x,w:30+Math.floor(rnd()*14)});
-    else if(r<.58)obs.push({t:'cone',x});
-    else if(r<.70){obs.push({t:'cone',x});obs.push({t:'cone',x:x+13});}
-    else if(r<.86)obs.push({t:'puddle',x,w:44});
-    else obs.push({t:'coffee',x,y:GY-58});
-    if(rnd()<.55)for(let i=0;i<4;i++)cr.push({x:x-22+i*16,y:GY-44-((i===1||i===2)?16:0),w:12,h:12,got:false});
-    x+=Math.floor(260-p*70+rnd()*190);}
-  const traffic=[];for(let i=0;i<6;i++)traffic.push({x:400+i*520,v:110+Math.floor(rnd()*60),c:['#d62828','#1d4e89','#f4a261','#2a9d8f','#ffd23f','#6d6a8f'][i],van:i%3===0});
+  const lane=()=>Math.floor(rnd()*3),two=()=>{const a=lane();return [a,(a+1+Math.floor(rnd()*2))%3];};
+  const flat=()=>{const r=rnd();return r<.45?'pit':r<.8?'cone':'puddle';};
+  const put=(t,x,ln)=>obs.push(t==='pit'?{t,x,lane:ln,w:30+Math.floor(rnd()*12)}:t==='puddle'?{t,x,lane:ln,w:44}:{t,x,lane:ln});
+  const cols=['#d62828','#1d4e89','#f4a261','#2a9d8f','#6d6a8f','#3a3a3a','#ffd23f'];
+  while(x<7600){const r=rnd(),p=x/7600;
+    if(r<.28)put(flat(),x,lane());
+    else if(r<.52){const [a,b]=two();put(flat(),x,a);put(rnd()<.5?'cone':'pit',x+Math.floor(rnd()*24),b);}
+    else if(r<.60&&p>.3){const t=rnd()<.5?'cone':'pit';for(let k=0;k<3;k++)put(t,x,k);}
+    else if(r<.86)obs.push({t:'car',x:x+40,lane:lane(),v:60+Math.floor(rnd()*30),c:cols[Math.floor(rnd()*cols.length)],van:rnd()<.35,act:false});
+    else obs.push({t:'coffee',x,lane:lane(),hg:22});
+    if(rnd()<.6){const ln=lane(),hg=rnd()<.6?14:46;for(let i=0;i<4;i++)cr.push({x:x+70+i*16,lane:ln,hg,got:false});}
+    x+=Math.floor(280-p*80+rnd()*170);}
+  const traffic=[];for(let i=0;i<6;i++)traffic.push({x:400+i*520,v:110+Math.floor(rnd()*60),c:cols[i],van:i%3===0});
   return {road:true,obs,cr,traffic,posts:[8200,8800,9400],end:10000,w:700,g:[],ents:[],vents:[],cps:[],
-    car:{x:60,y:GY,vy:0,v:0,inv:0,hold:0,boost:0,wheel:0},cop:{i:0,t:2.2,watch:true},arrive:false,arriveT:0,jprev:false};
+    car:{x:60,lane:2,ly:LY[2],z:0,vz:0,v:0,inv:0,hold:0,boost:0,wheel:0},cop:{i:0,t:2.2,watch:true},arrive:false,arriveT:0,jprev:false,pu:false,pd:false};
 }
 
 // ================== звук ==================
@@ -472,18 +478,19 @@ function playHB(){ // «С днём рождения тебя» (народна�
 }
 
 // ================== ввод ==================
-const K={l:false,r:false,j:false,t:false};
+const K={l:false,r:false,j:false,t:false,u:false,d:false};
 const keys=new Set();
 addEventListener('keydown',e=>{keys.add(e.code);if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();
   if(e.code==='KeyP'||e.code==='Escape')togglePause();else if(state==='title'){if(e.code==='Enter'||e.code==='Space')startGame(0);}else anyPress();});
 addEventListener('keyup',e=>keys.delete(e.code));
-const ptrs=new Map();
-const Z={l:document.getElementById('zl'),r:document.getElementById('zr'),j:document.getElementById('zj'),t:document.getElementById('zt')};
+const ptrs=new Map();let taps=[];
+const Z={l:document.getElementById('zl'),r:document.getElementById('zr'),j:document.getElementById('zj'),t:document.getElementById('zt'),u:document.getElementById('zu'),d:document.getElementById('zd')};
+function setRoadUI(on){Z.u.classList.toggle('hide',!on);Z.d.classList.toggle('hide',!on);Z.j.textContent=on?'⤴':'▲';}
 function inZone(el,x,y,pad){const b=el.getBoundingClientRect();if(!b.width)return false;const cx=b.left+b.width/2,cy=b.top+b.height/2,rr=b.width/2+pad;return (x-cx)**2+(y-cy)**2<rr*rr;}
 function onPtr(e){
   if(e.target.closest&&e.target.closest('.ib,.mbtn'))return;
   if(e.pointerType==='touch')document.body.classList.add('touch');
-  if(e.type==='pointerdown')anyPress();
+  if(e.type==='pointerdown'){anyPress();taps.push({x:e.clientX,y:e.clientY});}
   if(e.type==='pointerup'||e.type==='pointercancel')ptrs.delete(e.pointerId);else if(e.type==='pointerdown'||ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
 }
 ['pointerdown','pointermove','pointerup','pointercancel'].forEach(t=>addEventListener(t,onPtr,{passive:true}));
@@ -492,16 +499,21 @@ function readInput(){
   const l=keys.has('ArrowLeft')||keys.has('KeyA'),r=keys.has('ArrowRight')||keys.has('KeyD'),
         j=keys.has('ArrowUp')||keys.has('KeyW')||keys.has('Space')||keys.has('KeyZ'),
         t=keys.has('KeyX')||keys.has('KeyJ')||keys.has('KeyF')||keys.has('ShiftLeft')||keys.has('ShiftRight');
-  let tl=false,tr=false,tj=false,tt=false;
-  if(document.body.classList.contains('touch'))for(const p of ptrs.values()){
+  const road=!!(L&&L.road);
+  let tl=false,tr=false,tj=false,tt=false,tu=false,td=false;
+  const tl0=[...ptrs.values(),...taps];taps=[];
+  if(document.body.classList.contains('touch'))for(const p of tl0){
     if(inZone(Z.j,p.x,p.y,24))tj=true;
+    else if(road&&inZone(Z.u,p.x,p.y,8))tu=true;
+    else if(road&&inZone(Z.d,p.x,p.y,8))td=true;
     else if(inZone(Z.t,p.x,p.y,10))tt=true;
     else if(inZone(Z.l,p.x,p.y,12))tl=true;
     else if(inZone(Z.r,p.x,p.y,12))tr=true;
     else if(p.x<innerWidth*0.45){if(p.x<Z.r.getBoundingClientRect().left)tl=true;else tr=true;}
   }
-  Z.l.classList.toggle('on',tl);Z.r.classList.toggle('on',tr);Z.j.classList.toggle('on',tj);Z.t.classList.toggle('on',tt);
-  K.l=l||tl;K.r=r||tr;K.j=j||tj;K.t=t||tt;
+  Z.l.classList.toggle('on',tl);Z.r.classList.toggle('on',tr);Z.j.classList.toggle('on',tj);Z.t.classList.toggle('on',tt);Z.u.classList.toggle('on',tu);Z.d.classList.toggle('on',td);
+  K.l=l||tl;K.r=r||tr;K.j=j||tj;K.t=t||tt;K.u=false;K.d=false;
+  if(road){K.j=keys.has('Space')||keys.has('KeyZ')||tj;K.u=keys.has('ArrowUp')||keys.has('KeyW')||tu;K.d=keys.has('ArrowDown')||keys.has('KeyS')||td;}
 }
 document.getElementById('bm').addEventListener('pointerdown',e=>{e.stopPropagation();muted=!muted;e.target.textContent=muted?'🔇':'🔊';});
 document.getElementById('bp').addEventListener('pointerdown',e=>{e.stopPropagation();togglePause();});
@@ -542,7 +554,7 @@ function startGame(n){lives=5;coins=0;score=0;totalCoins=0;cpIdx=-1;lvl=n;
   if(dbg){lvl=dbg.lvl;cpIdx=dbg.cp;dbg=null;}
   $('hud').style.display='';document.body.classList.remove('fin');
   if(lvl>=STAGES){lvl=STAGES;startParty();}else showCall(lvl);}
-function goTitle(){state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
+function goTitle(){setRoadUI(false);state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
   document.body.classList.remove('fin','bossOn');$('cap').classList.remove('show');$('banner').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');}
 function togglePause(){if(state==='play'){state='pause';showOv('o-pause');}else if(state==='pause'){state='play';showOv(null);}}
 const CALLS=[
@@ -570,10 +582,10 @@ function startLevel(){
     unlock(lvl);L=buildRoad();buildBG(THEMES[lvl]);
     hero={x:0,y:0,w:11,h:22,face:1,anim:0,on:true,vx:0,vy:0,inv:0,hide:true,big:false};
     cam=0;state='play';showOv(null);hud();
-    banner('Уровень 2: Трасса',2.5);caption('▲ — прыжок через ямы и конусы · ▶ — газ · ◀ — тормоз',3.5);snd('engine');
+    banner('Уровень 2: Трасса',2.5);caption('▲▼ — сменить полосу и объехать · ⤴ (пробел) — прыжок · ▶ газ · ◀ тормоз',4);setRoadUI(true);snd('engine');
     return;
   }
-  unlock(lvl);
+  unlock(lvl);setRoadUI(false);
   L=buildLevel(lvl);buildBG(THEMES[lvl]);
   for(const e of L.ents){
     const px=e.x*T,py=e.y*T;
@@ -767,34 +779,39 @@ function update(dt){
 function gameOver(){state='over';timer=1;msg('Смена окончена','Счёт: '+score+' · нажми, чтобы вернуться в меню');}
 
 // ---------- трасса ----------
-function crash(){const c=L.car;lives--;hud();snd('hurt');c.inv=1.6;c.vy=-240;c.v*=.4;shake=.3;burst(c.x+36,c.y-10,'#ffffff',12,160);
+function crash(){const c=L.car;lives--;hud();snd('hurt');c.inv=1.6;c.vz=240;c.v*=.4;shake=.3;burst(c.x+36,c.ly-c.z-10,'#ffffff',12,160);
   caption(['Ай! Подвеска!','Осторожно, груз!','Бутылки звенят…'][Math.floor(Math.random()*3)],1.4);if(lives<=0)gameOver();}
 function updRoad(dt){
   const c=L.car,cop=L.cop;
   if(c.inv>0)c.inv-=dt;
-  if(L.arrive){c.v=Math.max(0,c.v-200*dt);c.x+=c.v*dt;c.wheel+=c.v*dt/6;
+  if(K.u&&!L.pu&&c.lane>0){c.lane--;snd('throw');}if(K.d&&!L.pd&&c.lane<2){c.lane++;snd('throw');}L.pu=K.u;L.pd=K.d;
+  c.ly+=Math.max(-120*dt,Math.min(120*dt,LY[c.lane]-c.ly));
+  if(L.arrive){c.v=Math.max(0,c.v-200*dt);c.x+=c.v*dt;c.wheel+=c.v*dt/6;c.vz-=1300*dt;c.z=Math.max(0,c.z+c.vz*dt);
     if(c.v===0){L.arriveT+=dt;fade=Math.max(0,Math.min(1,(L.arriveT-.8)/1));if(L.arriveT>2){fade=1;nextStage();return;}}
     cam=Math.max(0,c.x-VW*.22);return;}
   c.hold-=dt;let target=c.hold>0||K.l?0:K.r?250:165;
   if(c.boost>0){c.boost-=dt;if(!K.l&&c.hold<=0)target=300;}
   c.v+=Math.max(-420*dt,Math.min(260*dt,target-c.v));
   c.x+=c.v*dt;c.wheel+=c.v*dt/6;
-  const on=c.y>=GY;
-  if(K.j&&!L.jprev&&on){c.vy=-420;snd('jump');}
+  if(K.j&&!L.jprev&&c.z<=0){c.vz=420;snd('jump');}
   L.jprev=K.j;
-  c.vy+=1300*dt;c.y+=c.vy*dt;if(c.y>=GY){if(c.vy>200)burst(c.x+36,GY,'#bbbbbb',4,60);c.y=GY;c.vy=0;}
-  if(on&&c.v>20&&Math.random()<dt*14)parts.push({x:c.x,y:GY-5,vx:-30-Math.random()*30,vy:-10-Math.random()*15,t:.6,c:'#cccccc',g:-10,s:3});
-  const box={x:c.x+3,y:c.y-28,w:66,h:28};
+  c.vz-=1300*dt;c.z+=c.vz*dt;if(c.z<=0){if(c.vz<-200)burst(c.x+36,c.ly,'#bbbbbb',4,60);c.z=0;c.vz=0;}
+  if(c.z<=0&&c.v>20&&Math.random()<dt*14)parts.push({x:c.x,y:c.ly-5,vx:-30-Math.random()*30,vy:-10-Math.random()*15,t:.6,c:'#cccccc',g:-10,s:3});
+  const same=ln=>Math.abs(c.ly-LY[ln])<7,hx=(a,w)=>c.x+69>a&&c.x+3<a+w;
   for(const o of L.obs){
+    if(o.t==='car'){if(!o.act&&o.x<cam+VW+20)o.act=true;if(o.act)o.x+=o.v*dt;if(o.x>7800||o.x<cam-300){o.gone=true;continue;}}
     if(o.x>c.x+120||o.x<c.x-200)continue;
-    if(o.t==='pit'){if(c.y>=GY&&c.inv<=0)for(const wx of [c.x+15,c.x+57])if(wx>o.x+3&&wx<o.x+o.w-3){crash();break;}}
-    else if(o.t==='cone'){if(!o.fly&&c.y>GY-14&&box.x+box.w>o.x+1&&box.x<o.x+11){o.fly={vx:180,vy:-260,r:0};snd('bump');if(c.inv<=0)crash();}}
-    else if(o.t==='puddle'){if(!o.sp&&c.y>=GY&&c.x+57>o.x&&c.x+15<o.x+o.w){o.sp=true;c.v*=.7;snd('splash');for(let i=0;i<14;i++)parts.push({x:o.x+Math.random()*o.w,y:GY-2,vx:(Math.random()-.5)*120,vy:-80-Math.random()*120,t:.7,c:'#8fd3ff',g:600,s:2});}}
-    else if(o.t==='coffee'){if(!o.got&&ov(box,{x:o.x,y:o.y,w:10,h:12})){o.got=true;c.boost=2.5;addScore(300,o.x,o.y);snd('power');caption('Кофе! ☕ Турбо-режим',1.6);}}
+    const s=same(o.lane);
+    if(o.t==='pit'){if(s&&c.z<=0&&c.inv<=0)for(const wx of [c.x+15,c.x+57])if(wx>o.x+3&&wx<o.x+o.w-3){crash();break;}}
+    else if(o.t==='cone'){if(!o.fly&&s&&c.z<14&&hx(o.x+1,10)){o.fly={vx:180,vy:-260,r:0};snd('bump');if(c.inv<=0)crash();}}
+    else if(o.t==='puddle'){if(!o.sp&&s&&c.z<=0&&c.x+57>o.x&&c.x+15<o.x+o.w){o.sp=true;c.v*=.7;snd('splash');for(let i=0;i<14;i++)parts.push({x:o.x+Math.random()*o.w,y:LY[o.lane]-2,vx:(Math.random()-.5)*120,vy:-80-Math.random()*120,t:.7,c:'#8fd3ff',g:600,s:2});}}
+    else if(o.t==='coffee'){if(!o.got&&s&&c.z<o.hg+12&&c.z+28>o.hg&&hx(o.x,10)){o.got=true;c.boost=2.5;addScore(300,o.x,LY[o.lane]-o.hg-12);snd('power');caption('Кофе! ☕ Турбо-режим',1.6);}}
+    else if(o.t==='car'){if(s&&c.inv<=0&&c.z<(o.van?34:26)&&hx(o.x,o.van?54:46)){snd('honk');crash();c.v=Math.min(c.v,o.v*.5);caption('Бах! Машину надо объезжать ▲▼',1.8);}}
     if(o.fly){o.fly.vy+=900*dt;o.fly.r+=dt*12;}
   }
+  L.obs=L.obs.filter(o=>!o.gone);
   for(const o of L.obs)if(o.fly){o.x+=o.fly.vx*dt;o.fy=(o.fy||0)+o.fly.vy*dt;}
-  for(const k of L.cr)if(!k.got&&ov(box,k)){k.got=true;addCoin();burst(k.x+6,k.y+6,'#ffd23f',5,90);}
+  for(const k of L.cr)if(!k.got&&same(k.lane)&&hx(k.x,12)&&c.z<k.hg+12&&c.z+28>k.hg){k.got=true;addCoin();burst(k.x+6,LY[k.lane]-k.hg-6,'#ffd23f',5,90);}
   for(const t of L.traffic){t.x-=t.v*dt;if(t.x<c.x-VW)t.x=c.x+VW+200+Math.random()*400;}
   // гаишник
   if(cop.i<3){cop.t-=dt;if(cop.t<=0){cop.watch=!cop.watch;cop.t=cop.watch?2+Math.random()*.9:1.4+Math.random()*.5;}
@@ -802,7 +819,7 @@ function updRoad(dt){
     if(!L.copHint&&c.x>px-760){L.copHint=true;snd('whistle');caption('👮 Гаишник! Проезжай, только когда он отвернётся (☕). ◀ — тормоз',3.6);}
     if(c.x+70>=px){
       if(cop.watch){snd('whistle');caption('👮 «Стоп! Ваши документы!» — сдай назад и жди момент',2.4);c.x=px-330;c.v=0;c.hold=.8;shake=.2;}
-      else{cop.i++;snd('coin');addScore(500,c.x+60,c.y-40);caption(cop.i<3?'Проскочил! '+cop.i+'/3':'Гаишник остался ни с чем! 😎',2);if(cop.i<3){cop.watch=true;cop.t=1.2+Math.random()*.8;}}}}
+      else{cop.i++;snd('coin');addScore(500,c.x+60,c.ly-40);caption(cop.i<3?'Проскочил! '+cop.i+'/3':'Гаишник остался ни с чем! 😎',2);if(cop.i<3){cop.watch=true;cop.t=1.2+Math.random()*.8;}}}}
   else if(c.x>L.end-260){L.arrive=true;L.arriveT=0;caption('Магазин «У дома» 🏪 — приехали!',2.5);snd('clear');addScore(1000);}
   cam=Math.max(0,c.x-VW*.22);
 }
@@ -1054,29 +1071,35 @@ function drawRoad(){
   const w=BG.wall.width,m=BG.mid.width;
   for(let x=-((cam*.12)%w);x<VW;x+=w)ctx.drawImage(BG.wall,Math.floor(x),0);
   for(let x=-((cam*.4)%m);x<VW;x+=m)ctx.drawImage(BG.mid,Math.floor(x),0);
-  // магазин в конце
   const sx=Math.round(L.end-80-cam);if(sx>-200&&sx<VW+20){RR('#e9e4d6',sx,48,170,90);RR('#2a9d8f',sx,48,170,22);ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('МАГАЗИН «У ДОМА»',sx+85,63);
     RR('#8fd3ff',sx+12,82,50,34);RR('#8fd3ff',sx+108,82,50,34);RR('#5a3a22',sx+72,88,26,50);RR('#ffd23f',sx+92,112,2,3);}
   RR('#b9b4a8',0,138,VW,12);for(let x=-(cam%24);x<VW;x+=24)RR('#a39e92',Math.floor(x),138,1,12);
-  RR('#4a4d55',0,150,VW,66);RR('#3d4047',0,150,VW,3);
-  for(let x=-(cam%40);x<VW;x+=40)RR('#e8e8e8',Math.floor(x),182,20,2);
-  RR('#9a9488',0,216,VW,8);RR('#7d776c',0,216,VW,1);
-  for(const t of L.traffic){const x=t.x-cam;if(x>-70&&x<VW+10)drawSimpleCar(x,174,t.c,t.van);}
-  // гаишник
+  RR('#4a4d55',0,150,VW,67);RR('#3d4047',0,150,VW,3);
+  RR('#f2f2f2',0,169,VW,1);RR('#f2f2f2',0,172,VW,1);
+  for(const y of [186,201])for(let x=-(cam%40);x<VW;x+=40)RR('#d8d8d8',Math.floor(x),y,20,1);
+  RR('#9a9488',0,217,VW,7);RR('#7d776c',0,217,VW,1);
+  for(const t of L.traffic){const x=t.x-cam;if(x>-70&&x<VW+10)drawSimpleCar(x,166,t.c,t.van);}
   if(cop.i<3){const px=L.posts[cop.i]-cam;if(px>-40&&px<VW+40){
       RR('#ffffff',px+18,112,2,26);RR('#1d4e89',px+12,104,14,10);ctx.fillStyle='#fff';ctx.font='bold 6px sans-serif';ctx.textAlign='center';ctx.fillText('ДПС',px+19,111);
       drawCop(px,150,-1,!cop.watch);
       ctx.font='bold 12px sans-serif';ctx.fillStyle=cop.watch?'#ff3b3b':'#ffffff';ctx.fillText(cop.watch?'!':'☕',px+7,98+Math.sin(time*6)*2);}}
-  for(const o of L.obs){const x=Math.round(o.x-cam);if(x<-60||x>VW+20)continue;
-    if(o.t==='pit'){RR('#1b1b1d',x,GY-2,o.w,5);RR('#2e3036',x-2,GY-3,o.w+4,1);RR('#111',x+3,GY+3,o.w-6,2);}
-    else if(o.t==='puddle'){ctx.fillStyle='#6fb7e8';ctx.beginPath();ctx.ellipse(x+o.w/2,GY,o.w/2,3,0,0,7);ctx.fill();RR('#c9ecff',x+8,GY-1,8,1);}
-    else if(o.t==='cone'){ctx.save();ctx.translate(x+6,GY-7+(o.fy||0));if(o.fly)ctx.rotate(o.fly.r);
-      ctx.fillStyle='#ff7a1a';ctx.beginPath();ctx.moveTo(-5,6);ctx.lineTo(5,6);ctx.lineTo(1,-7);ctx.lineTo(-1,-7);ctx.fill();RR('#fff',-3,-1,6,2);RR('#333',-6,6,12,2);ctx.restore();}
-    else if(o.t==='coffee'&&!o.got){const y=Math.round(o.y+Math.sin(time*4+o.x)*2);RR('#fff',x,y+2,9,10);RR('#7a4a22',x,y+2,9,2);RR('#c0262d',x,y+6,9,2);RR('#fff',x+9,y+4,2,4);
-      if(Math.floor(time*3)%2)RR('#ffffff99',x+3,y-2,2,3);}}
-  const cf=COINS[Math.floor(time*8)%4];for(const k of L.cr)if(!k.got&&k.x>cam-16&&k.x<cam+VW)ctx.drawImage(cf,Math.floor(k.x-cam),Math.floor(k.y));
-  if(!(c.inv>0&&Math.floor(time*20)%2))drawCar(c.x-cam,c.y,c.wheel,true);
-  if(c.boost>0&&Math.floor(time*20)%2){RR('#ffd23f',c.x-cam-8,c.y-12,6,2);RR('#ff8c1a',c.x-cam-14,c.y-8,8,2);}
+  // плоские препятствия (ямы, лужи)
+  for(const o of L.obs){const x=Math.round(o.x-cam),y=LY[o.lane];if(x<-60||x>VW+20)continue;
+    if(o.t==='pit'){RR('#1b1b1d',x,y-5,o.w,5);RR('#2e3036',x-2,y-6,o.w+4,1);RR('#111',x+3,y-1,o.w-6,1);}
+    else if(o.t==='puddle'){ctx.fillStyle='#6fb7e8';ctx.beginPath();ctx.ellipse(x+o.w/2,y-3,o.w/2,3,0,0,7);ctx.fill();RR('#c9ecff',x+8,y-4,8,1);}}
+  const cf=COINS[Math.floor(time*8)%4],myLane=Math.round((c.ly-LY[0])/15);
+  for(let ln=0;ln<3;ln++){const y=LY[ln];
+    for(const o of L.obs){if(o.lane!==ln)continue;const x=Math.round(o.x-cam);if(x<-60||x>VW+20)continue;
+      if(o.t==='cone'){ctx.save();ctx.translate(x+6,y-7+(o.fy||0));if(o.fly)ctx.rotate(o.fly.r);
+        ctx.fillStyle='#ff7a1a';ctx.beginPath();ctx.moveTo(-5,6);ctx.lineTo(5,6);ctx.lineTo(1,-7);ctx.lineTo(-1,-7);ctx.fill();RR('#fff',-3,-1,6,2);RR('#333',-6,6,12,2);ctx.restore();}
+      else if(o.t==='car')drawSimpleCar(x,y,o.c,o.van);
+      else if(o.t==='coffee'&&!o.got){const yy=Math.round(y-o.hg-12+Math.sin(time*4+o.x)*2);RR('#0003',x,y-2,10,2);RR('#fff',x,yy+2,9,10);RR('#7a4a22',x,yy+2,9,2);RR('#c0262d',x,yy+6,9,2);RR('#fff',x+9,yy+4,2,4);
+        if(Math.floor(time*3)%2)RR('#ffffff99',x+3,yy-2,2,3);}}
+    for(const k of L.cr)if(k.lane===ln&&!k.got&&k.x>cam-16&&k.x<cam+VW)ctx.drawImage(cf,Math.floor(k.x-cam),Math.floor(y-k.hg-12));
+    if(myLane===ln){const cx=c.x-cam;if(c.z>0)RR('#0004',cx+6,c.ly-2,60,3);
+      if(!(c.inv>0&&Math.floor(time*20)%2))drawCar(cx,c.ly-c.z,c.wheel,true);
+      if(c.boost>0&&Math.floor(time*20)%2){RR('#ffd23f',cx-8,c.ly-c.z-12,6,2);RR('#ff8c1a',cx-14,c.ly-c.z-8,8,2);}}
+  }
   drawFx();ctx.restore();
   if(fade>0){ctx.fillStyle='rgba(0,0,0,'+fade+')';ctx.fillRect(0,0,VW,VH);}
 }
