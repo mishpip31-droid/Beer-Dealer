@@ -404,6 +404,16 @@ function pallet(x,side){R(x,'#b98a55',0,0,16,13);R(x,'#8a6a3a',0,13,16,3);R(x,'#
 TS.hyper.barL=tileCanvas(x=>pallet(x,0));TS.hyper.barR=tileCanvas(x=>pallet(x,1));
 
 
+// ---------- вывески сетей: пиксельные версии логотипов «Евроопт» и «Гиппо» ----------
+function logoEvroopt(c,x,y,w,h){c.fillStyle='#ffffff';c.fillRect(x,y,w,h);c.fillStyle='#d8dde2';c.fillRect(x,y+h-1,w,1);
+  const r=Math.floor(h*.38),cx=x+3+r,cy=y+h/2;c.fillStyle='#7dc000';c.beginPath();c.arc(cx,cy,r,0,7);c.fill();
+  c.fillStyle='#353a40';c.font='bold '+Math.round(r*1.9)+'px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('е',cx,cy-r*.08);
+  c.fillStyle='#7dc000';c.font='bold '+Math.round(h*.62)+'px sans-serif';c.textAlign='left';c.fillText('евроопт',cx+r+3,cy);c.textBaseline='alphabetic';}
+function logoGippo(c,x,y,w,h){c.fillStyle='#ffffff';c.fillRect(x,y,w,h);c.fillStyle='#d8dde2';c.fillRect(x,y+h-1,w,1);
+  const fs=Math.round(h*.78);c.font='italic bold '+fs+'px sans-serif';c.textBaseline='middle';c.textAlign='left';
+  const tw=c.measureText('гиппо').width,tx=x+(w-tw)/2,cy=y+h/2,ow=c.measureText('о').width,ox=tx+c.measureText('гипп').width;
+  c.fillStyle='#f26500';c.fillText('гиппо',tx,cy);
+  c.strokeStyle='#a9b800';c.lineWidth=Math.max(1.5,fs*.13);c.beginPath();c.arc(ox+ow*.42,cy+fs*.04,fs*.44,Math.PI*.66,Math.PI*1.34);c.stroke();c.textBaseline='alphabetic';}
 // ================== темы и фон ==================
 const THEMES=[
  {name:'Раковский Бровар',kind:'brew',sky:['#2d1a12','#5a3320'],wall:'#6a2e20',wall2:'#4c1f15',tank:'#c27a3a',tank2:'#8e5426'},
@@ -419,7 +429,7 @@ function buildBG(th){
     wx.fillStyle=th.top||'#c9c4b3';wx.fillRect(0,0,320,14);
     for(let x=10;x<320;x+=80){wx.fillStyle='#fffbe0';wx.fillRect(x,14,50,4);wx.fillStyle='#fffbe055';wx.fillRect(x-6,18,62,6);}
     const signs=th.signs||[['ЕВРООПТ','#d62828'],['ПИВО','#2a9d8f'],['ПРОДУКТЫ','#457b9d'],['АКЦИЯ','#e76f51']];
-    signs.forEach(([t,c],i)=>{const x=10+i*78,y=34;wx.fillStyle=c;wx.fillRect(x,y,62,16);wx.fillStyle='#fff';wx.font='bold 10px sans-serif';wx.textAlign='center';wx.fillText(t,x+31,y+12);});
+    signs.forEach(([t,c],i)=>{const x=10+i*78,y=34;if(t==='ЕВРООПТ'){logoEvroopt(wx,x-4,y-1,70,18);return;}wx.fillStyle=c;wx.fillRect(x,y,62,16);wx.fillStyle='#fff';wx.font='bold 10px sans-serif';wx.textAlign='center';wx.fillText(t,x+31,y+12);});
     const [m,mx]=mk(576,VH);const rnd=mulberry(th.signs?19:7);
     const C=['#e63946','#f1c40f','#2a9d8f','#e76f51','#457b9d','#8e44ad','#f4a261','#3d6b2e','#ffffff','#ff8fab'];
     const pc=()=>C[Math.floor(rnd()*C.length)];
@@ -465,13 +475,14 @@ function buildBG(th){
     for(let x=0;x<384;x+=16){wx.fillStyle='#4a5263';wx.beginPath();wx.moveTo(x,11);wx.lineTo(x+2,11);wx.lineTo(x+10,24);wx.lineTo(x+8,24);wx.fill();}
     for(let x=10;x<384;x+=64){wx.fillStyle='#fffbe0';wx.fillRect(x,30,34,4);wx.fillStyle='#fffbe014';wx.beginPath();wx.moveTo(x,34);wx.lineTo(x-14,120);wx.lineTo(x+48,120);wx.lineTo(x+34,34);wx.fill();}
     const dep=[['ГИППО','#e07a1f'],['МОЛОЧКА','#3d8bd6'],['ПИВО','#2a9d8f'],['ОВОЩИ','#5aa83a'],['БАКАЛЕЯ','#8e44ad'],['КАССЫ','#d62828']];
-    dep.forEach(([t,c],i)=>{const x=8+i*64;wx.fillStyle='#888';wx.fillRect(x+12,27,1,16);wx.fillRect(x+44,27,1,16);wx.fillStyle=c;wx.fillRect(x,43,58,14);wx.fillStyle='#fff';wx.font='bold 8px sans-serif';wx.textAlign='center';wx.fillText(t,x+29,53);});
+    dep.forEach(([t,c],i)=>{const x=8+i*64;wx.fillStyle='#888';wx.fillRect(x+12,27,1,16);wx.fillRect(x+44,27,1,16);if(t==='ГИППО'){logoGippo(wx,x,42,58,16);return;}wx.fillStyle=c;wx.fillRect(x,43,58,14);wx.fillStyle='#fff';wx.font='bold 8px sans-serif';wx.textAlign='center';wx.fillText(t,x+29,53);});
     const [m,mx]=mk(640,VH);const rnd=mulberry(23);const F=(c,x,y,ww,hh)=>{mx.fillStyle=c;mx.fillRect(x,y,ww,hh);};
     const box=['#c8955a','#b07a3c','#d9a86a','#e0b878'],wrap=['#d62828','#2d5fa8','#2a9d8f','#ffd23f','#8e44ad'];
     for(let i=0;i<5;i++){const ox=i*128;
       if(i===2){ // кассы
         for(let k=0;k<3;k++){const x=ox+6+k*40;F('#cfd4da',x,164,34,28);F('#222',x,162,28,3);F('#9aa1a8',x+26,150,6,14);F('#1d1d1d',x+25,144,8,7);F('#7fd3ff',x+26,145,6,4);
           F('#555',x+2,120,2,42);F('#3cb043',x-2,112,10,10);mx.fillStyle='#fff';mx.font='bold 8px sans-serif';mx.textAlign='center';mx.fillText(''+(k+1),x+3,120);}
+        mx.fillStyle='#888';mx.fillRect(ox+30,52,1,18);mx.fillRect(ox+98,52,1,18);logoGippo(mx,ox+14,68,100,28);
         continue;}
       F('#2d5fa8',ox+4,56,5,136);F('#2d5fa8',ox+118,56,5,136);
       for(const by of [92,132,172]){F('#e8731c',ox+4,by,119,4);F('#b4560f',ox+4,by+4,119,1);
@@ -1376,7 +1387,7 @@ function drawRoad(){
   const w=BG.wall.width,m=BG.mid.width;
   for(let x=-((cam*.12)%w);x<VW;x+=w)ctx.drawImage(BG.wall,Math.floor(x),0);
   for(let x=-((cam*.4)%m);x<VW;x+=m)ctx.drawImage(BG.mid,Math.floor(x),0);
-  const sx=Math.round(L.end-80-cam);if(sx>-200&&sx<VW+20){RR('#e9e4d6',sx,48,170,90);RR('#2a9d8f',sx,48,170,22);ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ЕВРООПТ',sx+85,63);
+  const sx=Math.round(L.end-80-cam);if(sx>-200&&sx<VW+20){RR('#e9e4d6',sx,48,170,90);logoEvroopt(ctx,sx,46,170,26);
     RR('#8fd3ff',sx+12,82,50,34);RR('#8fd3ff',sx+108,82,50,34);RR('#5a3a22',sx+72,88,26,50);RR('#ffd23f',sx+92,112,2,3);}
   drawMarks();
   RR('#b9b4a8',0,138,VW,12);for(let x=-(cam%24);x<VW;x+=24)RR('#a39e92',Math.floor(x),138,1,12);
