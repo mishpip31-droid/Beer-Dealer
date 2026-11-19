@@ -4,3 +4,6 @@ app/build/
 local.properties
 *.iml
 .idea/
+
+# картинка-подарок не попадает в git (кладётся только перед сборкой APK)
+app/src/main/assets/gift.*
