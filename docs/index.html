@@ -654,10 +654,10 @@ function buildBike(){
   const ramp=(len,d,gap,drop)=>{const h0=h;put(len,t=>h0+d*t);h=h0+d;x+=gap;h=Math.min(204,h+drop);};
   const cps=[];
   flat(320);hill(240,-28);flat(80);bumps(200);hill(260,-40);hill(260,36);slope(220,-36);flat(70);
-  ramp(80,-22,60,34);flat(160);cps.push(x-115);
+  ramp(80,-22,44,40);flat(160);cps.push(x-115);
   hill(220,-48);hill(220,-56);hill(300,46);bumps(240);slope(260,-56);flat(60);slope(160,48);
-  ramp(90,-26,80,40);flat(140);cps.push(x-130);
-  for(let i=0;i<5;i++)slope(26,-9);flat(50);hill(300,-62);hill(220,54);ramp(70,-20,64,24);flat(60);
+  ramp(90,-26,56,48);flat(140);cps.push(x-130);
+  for(let i=0;i<5;i++)slope(26,-9);flat(50);hill(300,-62);hill(220,54);ramp(70,-20,46,34);flat(60);
   hill(260,-40);bumps(220);slope(200,30);flat(500);
   const end=x-260,w=x;
   // крышки над горками и трамплинами, бутылки воды
