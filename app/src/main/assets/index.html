@@ -32,11 +32,20 @@ html,body{margin:0;height:100%;background:#1a0f0a;overflow:hidden;touch-action:n
 #bossbar .bg{height:10px;border:2px solid #fff;border-radius:6px;background:#0008;margin-top:3px;overflow:hidden}
 #bossbar .fill{height:100%;background:linear-gradient(#ff7a59,#d62828);width:100%;transition:width .2s}
 #cap,#banner{position:absolute;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;text-align:center;text-shadow:0 3px 0 #000c;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .3s}
-#cap{white-space:normal;width:max-content;max-width:90vw}
+#cap{white-space:normal;width:max-content;max-width:min(80vw,640px);top:calc(14px + 5vh);bottom:auto;font-size:clamp(13px,4.2vh,22px);color:#2a1a0a;text-shadow:none;background:#fffbe8;border:3px solid #2a1a0a;border-radius:18px;padding:.3em .9em;box-shadow:0 4px 0 #0005;line-height:1.25}
+#cap::after{content:'';position:absolute;left:28px;bottom:-11px;width:14px;height:14px;background:#fffbe8;border-right:3px solid #2a1a0a;border-bottom:3px solid #2a1a0a;transform:rotate(45deg) skew(8deg,8deg)}
+body.bossOn #cap{top:calc(60px + 5vh)}
+body.fin #cap{top:auto;bottom:6vh}
+#banner{text-shadow:0 3px 0 #000c,0 0 8px #000a}
+#o-title h1{font-size:clamp(28px,11vh,64px)}
+#menu{display:flex;flex-wrap:wrap;justify-content:center;max-width:94vw;margin-top:.3em}
+.mbtn{pointer-events:auto;background:#ffcc33;color:#3a2000;border:3px solid #6b3a00;border-radius:12px;font:800 clamp(12px,3.7vh,20px) system-ui,sans-serif;padding:.3em .75em;margin:.22em;text-shadow:none;cursor:pointer;box-shadow:0 3px 0 #6b3a00}
+.mbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #6b3a00}
+.mbtn.main{background:#7dff6a;border-color:#1f6b12;box-shadow:0 3px 0 #1f6b12;color:#0f3a08;font-size:clamp(14px,4.6vh,26px)}
+.mbtn.lock{background:#5a5a5a;color:#bbb;border-color:#333;box-shadow:0 3px 0 #333;cursor:default}
 #o-call{background:#000b}
 #o-call .phone{background:#1d2b3a;border:3px solid #8fb3d9;border-radius:18px;padding:.6em 1.2em;max-width:80vw;box-shadow:0 0 30px #4fa3ff55}
 #o-call h2{font-size:clamp(18px,6vh,34px)}
-#cap{bottom:12vh;font-size:clamp(16px,6vh,34px)}
 #banner{top:28vh;font-size:clamp(20px,8vh,44px);color:#ffcc33}
 #cap.show,#banner.show{opacity:1}
 </style>
@@ -52,19 +61,18 @@ html,body{margin:0;height:100%;background:#1a0f0a;overflow:hidden;touch-action:n
 <div class="ov" id="o-title">
   <h1>АГЕНТ 0,5</h1>
   <p>Доставка ко дню рождения: успей развезти пиво до 19:00!</p>
-  <p class="small">Склад → Трасса → Магазин → Гипермаркет → Погоня за эвакуатором → ???</p>
-  <p class="small">Бей ящики головой — внутри кружки с пивом. С кружкой можно кидаться бутылками 🍾</p>
-  <p class="blink" style="margin-top:1em">Нажми, чтобы начать</p>
+  <p class="small">Бей ящики головой — внутри кружки с пивом 🍺 Вторая кружка делает героя больше!</p>
+  <div id="menu"></div>
   <p class="small" id="kbhint">Клавиатура: ← → движение, ↑ / пробел — прыжок, X — бросить бутылку</p>
 </div>
 <div class="ov" id="o-call"><div class="phone"><h2 id="cw"></h2><p id="ct"></p><p class="small blink" style="margin-top:.6em">Нажми, чтобы продолжить</p></div></div>
 <div class="ov" id="o-msg"><h2 id="mt"></h2><p id="ms"></p></div>
-<div class="ov" id="o-pause"><h2>Пауза</h2><p class="blink">Нажми, чтобы продолжить</p></div>
+<div class="ov" id="o-pause"><h2>Пауза</h2><div id="pmenu"><button class="mbtn main" id="bres">▶ Продолжить</button><button class="mbtn" id="bmenu">🏠 В меню</button></div></div>
 <div class="ov" id="o-bday">
   <h1 id="bh">С днём рождения!</h1>
   <p>🎉 Пусть пиво будет холодным, план — перевыполненным, а белая Kia Rio — всегда на ходу! 🎉</p>
   <p class="small" id="bscore"></p>
-  <p class="small blink" id="bagain" style="visibility:hidden">Нажми, чтобы сыграть ещё</p>
+  <p class="small blink" id="bagain" style="visibility:hidden">Нажми — в меню</p>
 </div>
 
 <script>
@@ -467,13 +475,13 @@ function playHB(){ // «С днём рождения тебя» (народна�
 const K={l:false,r:false,j:false,t:false};
 const keys=new Set();
 addEventListener('keydown',e=>{keys.add(e.code);if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();
-  if(e.code==='KeyP'||e.code==='Escape')togglePause();else anyPress();});
+  if(e.code==='KeyP'||e.code==='Escape')togglePause();else if(state==='title'){if(e.code==='Enter'||e.code==='Space')startGame(0);}else anyPress();});
 addEventListener('keyup',e=>keys.delete(e.code));
 const ptrs=new Map();
 const Z={l:document.getElementById('zl'),r:document.getElementById('zr'),j:document.getElementById('zj'),t:document.getElementById('zt')};
 function inZone(el,x,y,pad){const b=el.getBoundingClientRect();if(!b.width)return false;const cx=b.left+b.width/2,cy=b.top+b.height/2,rr=b.width/2+pad;return (x-cx)**2+(y-cy)**2<rr*rr;}
 function onPtr(e){
-  if(e.target.classList&&e.target.classList.contains('ib'))return;
+  if(e.target.closest&&e.target.closest('.ib,.mbtn'))return;
   if(e.pointerType==='touch')document.body.classList.add('touch');
   if(e.type==='pointerdown')anyPress();
   if(e.type==='pointerup'||e.type==='pointercancel')ptrs.delete(e.pointerId);else if(e.type==='pointerdown'||ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -514,9 +522,28 @@ function hud(){if(lvl>=STAGES)return;
   $('hc').textContent='🟡 ×'+coins;$('hs').textContent='📈 План '+planPct()+'%';$('hl').textContent='❤ ×'+lives;
   $('hv').textContent=(lvl+1)+'/'+STAGES+' · '+THEMES[lvl].name+(lvl===0?' · 📄'+docs+'/3':'');
   Z.t.classList.toggle('hide',!(hero&&hero.big&&state==='play'));
-  const bb=$('bossbar');
+  const bb=$('bossbar');document.body.classList.toggle('bossOn',!!((L&&L.road&&L.cop.i<3&&L.car.x>L.posts[0]-700)||(boss&&boss.alive&&L&&L.arena&&L.arena.locked)));
   if(L&&L.road){const c=L.cop;if(c.i<3&&L.car.x>L.posts[0]-700){bb.style.display='block';$('bn').textContent='Гаишник с жезлом';$('bf').style.width=(100*(3-c.i)/3)+'%';}else bb.style.display='none';}
   else if(boss&&boss.alive&&L.arena&&L.arena.locked){bb.style.display='block';$('bn').textContent=boss.name;$('bf').style.width=(100*boss.hp/boss.maxHp)+'%';}else bb.style.display='none';}
+// ---------- меню и сохранение прогресса ----------
+const SAVE='agent05_unlocked';
+function unlocked(){try{return Math.max(0,Math.min(STAGES,parseInt(localStorage.getItem(SAVE)||'0',10)||0));}catch(e){return memUnlock;}}
+let memUnlock=0;
+function unlock(n){memUnlock=Math.max(memUnlock,n);try{if(n>unlocked())localStorage.setItem(SAVE,''+n);}catch(e){}}
+function renderMenu(){
+  const m=$('menu');m.innerHTML='';const u=Math.max(unlocked(),memUnlock);
+  const add=(txt,cls,fn)=>{const b=document.createElement('button');b.className='mbtn '+cls;b.textContent=txt;if(fn)b.addEventListener('click',e=>{e.stopPropagation();ac();fn();});m.appendChild(b);};
+  add('▶ Играть с начала','main',()=>startGame(0));
+  const br=document.createElement('div');br.style.flexBasis='100%';m.appendChild(br);
+  THEMES.forEach((t,i)=>add(i<=u?(i+1)+'. '+t.name:'🔒 '+(i+1),i<=u?'':'lock',i<=u?()=>startGame(i):null));
+  add(STAGES<=u?'🎉 Сюрприз':'🔒 ???',STAGES<=u?'':'lock',STAGES<=u?()=>startGame(STAGES):null);
+}
+function startGame(n){lives=5;coins=0;score=0;totalCoins=0;cpIdx=-1;lvl=n;
+  if(dbg){lvl=dbg.lvl;cpIdx=dbg.cp;dbg=null;}
+  $('hud').style.display='';document.body.classList.remove('fin');
+  if(lvl>=STAGES){lvl=STAGES;startParty();}else showCall(lvl);}
+function goTitle(){state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
+  document.body.classList.remove('fin','bossOn');$('cap').classList.remove('show');$('banner').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');}
 function togglePause(){if(state==='play'){state='pause';showOv('o-pause');}else if(state==='pause'){state='play';showOv(null);}}
 const CALLS=[
  ['📞 Звонит начальник','С днём рож… кхм. Срочный заказ! Пять точек без пива, всё развезти до 19:00. Начни со склада — без трёх накладных кладовщик не выпустит!'],
@@ -530,23 +557,23 @@ function showCall(i){state='call';timer=.5;const c=CALLS[Math.min(i,CALLS.length
 function nextStage(){lvl++;cpIdx=-1;if(lvl>=STAGES)showCall(STAGES);else showCall(lvl);}
 function anyPress(){
   ac();
-  if(state==='title'){$('hud').style.display='';document.body.classList.remove('fin');lives=5;coins=0;score=0;totalCoins=0;lvl=0;cpIdx=-1;
-    if(dbg){lvl=dbg.lvl;cpIdx=dbg.cp;dbg=null;if(lvl>=STAGES){startParty();return;}}showCall(lvl);}
+  if(state==='title'){}
   else if(state==='call'&&timer<=0){if(lvl>=STAGES)startParty();else startLevel();}
   else if(state==='pause')togglePause();
   else if(state==='party'&&party&&party.t>PARTY_START){const li=Math.floor((party.t-PARTY_START)/PARTY_STEP);party.t=PARTY_START+(li+1)*PARTY_STEP;}
-  else if((state==='over'||state==='bday')&&timer<=0){state='title';L=null;fw=[];party=null;showOv('o-title');$('hud').style.display='';document.body.classList.remove('fin');}
+  else if((state==='over'||state==='bday')&&timer<=0)goTitle();
 }
 function startLevel(){
   $('hud').style.display='';document.body.classList.remove('fin');
   enemies=[];items=[];parts=[];pops=[];coinEnts=[];bumps=[];bottles=[];eproj=[];boss=null;cut=null;fade=0;docEnts=[];docs=0;
   if(THEMES[lvl].kind==='road'){
-    L=buildRoad();buildBG(THEMES[lvl]);
+    unlock(lvl);L=buildRoad();buildBG(THEMES[lvl]);
     hero={x:0,y:0,w:11,h:22,face:1,anim:0,on:true,vx:0,vy:0,inv:0,hide:true,big:false};
     cam=0;state='play';showOv(null);hud();
     banner('Уровень 2: Трасса',2.5);caption('▲ — прыжок через ямы и конусы · ▶ — газ · ◀ — тормоз',3.5);snd('engine');
     return;
   }
+  unlock(lvl);
   L=buildLevel(lvl);buildBG(THEMES[lvl]);
   for(const e of L.ents){
     const px=e.x*T,py=e.y*T;
@@ -611,9 +638,14 @@ function killEnemy(e,flipped){
   e.alive=false;e.dead=flipped?'flip':'squash';e.dt=flipped?2:.5;e.vy=flipped?-220:0;addScore(100,e.x+e.w/2,e.y);
   burst(e.x+e.w/2,e.y+e.h/2,'#fffbe8',8,140);snd('stomp');
 }
+function canGrow(o,w,hh){const x=o.x-(w-o.w)/2,y=o.y+o.h-hh;
+  for(let ty=Math.floor(y/T);ty<=Math.floor((y+hh-.01)/T);ty++)for(let tx=Math.floor(x/T);tx<=Math.floor((x+w-.01)/T);tx++)if(solid(tx,ty))return false;return true;}
+function setGiant(h,on){if(!!h.giant===on)return true;const w=on?14:11,hh=on?28:22;if(on&&!canGrow(h,w,hh))return false;
+  h.x-=(w-h.w)/2;h.y+=h.h-hh;h.w=w;h.h=hh;h.giant=on;return true;}
 function hurtHero(){
   if(hero.inv>0||hero.dead)return;
-  if(hero.big){hero.big=false;hero.inv=1.6;snd('hurt');burst(hero.x+6,hero.y+10,'#f2b632',10,160);hud();}
+  if(hero.giant){setGiant(hero,false);hero.inv=1.6;snd('hurt');burst(hero.x+6,hero.y+10,'#f2b632',10,160);caption('Ой! Снова обычного роста',1.6);hud();}
+  else if(hero.big){hero.big=false;hero.inv=1.6;snd('hurt');burst(hero.x+6,hero.y+10,'#f2b632',10,160);hud();}
   else dieHero();
 }
 function dieHero(){if(hero.dead)return;hero.dead=true;hero.vy=-380;hero.vx=0;state='dying';timer=2;snd('die');}
@@ -665,6 +697,7 @@ function update(dt){
   if(h.x<cam)h.x=cam,h.vx=Math.max(0,h.vx);
   h.anim+=Math.abs(h.vx)*dt*.09;
   if(h.inv>0)h.inv-=dt;
+  if(h.growPend&&h.big&&setGiant(h,true)){h.growPend=false;snd('life');caption('Вторая кружка! Ты стал больше и сильнее 💪',2.5);}
   if(h.y>VH+20){dieHero();return;}
   for(let i=L.cps.length-1;i>cpIdx;i--)if(h.x>L.cps[i]*T){cpIdx=i;pops.push({x:h.x,y:h.y-10,t:1.2,s:'Чекпоинт!'});snd('coin');break;}
   // эвакуатор уезжает в начале 5 уровня
@@ -688,7 +721,10 @@ function update(dt){
     if(it.emerge>0){const d=Math.min(it.emerge,30*dt);it.y-=d;it.emerge-=d;continue;}
     it.vy=Math.min(500,it.vy+1200*dt);moveX(it,it.vx*dt);if(it.wall)it.vx=-it.vx;moveY(it,it.vy*dt);
     if(ov(h,it)){it.gone=true;
-      if(it.t==='mug'){h.big=true;addScore(500,it.x,it.y);snd('power');burst(it.x+6,it.y,'#fffaf0',12,150);caption('Кружка пива! Теперь можно кидаться бутылками 🍾',2.5);hud();}
+      if(it.t==='mug'){addScore(500,it.x,it.y);snd('power');burst(it.x+6,it.y,'#fffaf0',12,150);
+        if(!h.big){h.big=true;caption('Кружка пива! Теперь можно кидаться бутылками 🍾',2.5);}
+        else if(!h.giant){if(setGiant(h,true)){snd('life');caption('Вторая кружка! Ты стал больше и сильнее 💪',2.5);}else h.growPend=true;}
+        else caption('Ещё кружка! +500',1.2);hud();}
       else{lives++;snd('life');pops.push({x:it.x,y:it.y,t:1,s:'+1 ❤'});}}
     if(it.y>VH+40)it.gone=true;
   }
@@ -728,7 +764,7 @@ function update(dt){
   if(L.finish&&h.x+h.w>L.finish*T){addScore(1000);snd('clear');startCut('crate');}
   stepFx(dt);hud();
 }
-function gameOver(){state='over';timer=1;msg('Смена окончена','Счёт: '+score+' · нажми, чтобы начать заново');}
+function gameOver(){state='over';timer=1;msg('Смена окончена','Счёт: '+score+' · нажми, чтобы вернуться в меню');}
 
 // ---------- трасса ----------
 function crash(){const c=L.car;lives--;hud();snd('hurt');c.inv=1.6;c.vy=-240;c.v*=.4;shake=.3;burst(c.x+36,c.y-10,'#ffffff',12,160);
@@ -820,7 +856,7 @@ function startCut(kind){
   if(kind==='crate'){cut.item={x:L.dock*T,y:12*T-12};cut.car={x:L.carX,vx:0};}
   else if(kind==='doc'){cut.item={x:Math.max((A.x0+1)*T,Math.min((A.x1-2)*T,boss.x)),y:12*T-12};cut.car={x:L.carX,vx:0};}
   else if(kind==='tow'){boss.empty=true;const cx=boss.x+(boss.face>0?2:24);cut.car={x:Math.max((A.x0)*T,Math.min((A.x1-5)*T,cx)),vx:0};burst(cut.car.x+36,12*T-14,'#ffffff',16,160);snd('bump');}
-  hero.big=false;hero.vx=0;hud();
+  setGiant(hero,false);hero.big=false;hero.vx=0;hud();
   if(CUTTXT[kind].start)caption(CUTTXT[kind].start,2.4);
 }
 function updCut(dt){
@@ -851,7 +887,7 @@ const PARTY_LINES=[
  [4,'Бочкан: Бу-бух! Наливай! 🛢️'],
  [-1,'Все: С ДНЁМ РОЖДЕНИЯ!!! 🎂']];
 function startParty(){
-  state='party';party={t:0,lit:false,line:-1,said:false};fade=0;cam=0;parts=[];pops=[];L=null;
+  unlock(STAGES);state='party';party={t:0,lit:false,line:-1,said:false};fade=0;cam=0;parts=[];pops=[];L=null;
   $('hud').style.display='none';$('bossbar').style.display='none';Z.t.classList.add('hide');document.body.classList.add('fin');showOv(null);
   caption('Последняя точка — бар на углу…',2.4);
 }
@@ -986,6 +1022,7 @@ function drawLoot(kind,x,y){
 function drawHero(h,x,y){
   let fr='stand';if(h.dead||!h.on)fr='jump';else if(Math.abs(h.vx)>8)fr=Math.floor(h.anim)%2?'w1':'w2';
   ctx.save();
+  if(h.giant){ctx.translate(x+8,y+24);ctx.scale(1.25,1.25);ctx.translate(-x-8,-y-24);}
   if(h.dead){ctx.translate(x+8,y+12);ctx.rotate(Math.PI);ctx.translate(-x-8,-y-12);}
   ctx.drawImage(HERO[fr][h.face>0?0:1],x,y);
   if(h.big){const mx=h.face>0?x+12:x-8;ctx.drawImage(MUG[h.face>0?0:1],mx,y+11,10,9);
@@ -1105,7 +1142,7 @@ function draw(){
   const lk=cut&&cut.kind==='doc'?'doc':'crate';
   if(cut&&cut.item&&!cut.carried&&!cut.loaded)drawLoot(lk,cut.item.x-cam,cut.item.y);
   const h=hero;
-  if(!h.hide&&!(h.inv>0&&Math.floor(time*20)%2))drawHero(h,Math.floor(h.x-cam-2),Math.floor(h.y+h.h-24));
+  if(!h.hide&&!(h.inv>0&&Math.floor(time*20)%2))drawHero(h,Math.floor(h.x+h.w/2-cam-8),Math.floor(h.y+h.h-24));
   if(cut){if(cut.carried)drawLoot(lk,h.x-cam-3,h.y-12);if(cut.car)drawCar(cut.car.x-cam,12*T,cut.wheel,cut.inCar);}
   drawFx();ctx.restore();
   if(fade>0){ctx.fillStyle='rgba(0,0,0,'+fade+')';ctx.fillRect(0,0,VW,VH);}
@@ -1196,7 +1233,9 @@ function loop(now){
 }
 // отладка: ?lvl=3&boss=1 — старт с нужного места (lvl=6 — сразу сюрприз в баре)
 (function(){const q=new URLSearchParams(location.search);if(q.has('lvl'))dbg={lvl:Math.max(0,Math.min(STAGES,+q.get('lvl')-1)),cp:q.has('boss')?99:-1};})();
-showOv('o-title');requestAnimationFrame(loop);
+$('bres').addEventListener('click',e=>{e.stopPropagation();if(state==='pause')togglePause();});
+$('bmenu').addEventListener('click',e=>{e.stopPropagation();goTitle();});
+goTitle();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
