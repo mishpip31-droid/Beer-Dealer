@@ -864,10 +864,10 @@ function updBoss(dt){
   const dir=Math.sign((hero.x+hero.w/2)-(b.x+b.w/2))||1;
   const wasOn=b.on;
   if(b.kind==='zav'){b.face=dir;
-    b.ct-=dt;if(b.ct<=0){b.ct=b.hp<=4?1.0:1.5;eproj.push({k:'tag',x:b.x+b.w/2,y:b.y+10,w:6,h:5,vx:dir*(100+Math.random()*90),vy:-260-Math.random()*120});snd('throw');}
+    b.ct-=dt;if(b.ct<=0){b.ct=b.hp<=4?1.6:2.3;eproj.push({k:'tag',x:b.x+b.w/2,y:b.y+10,w:6,h:5,vx:dir*(100+Math.random()*90),vy:-260-Math.random()*120});snd('throw');}
     b.dash-=dt;if(b.dash<=0){b.dashT=.7;b.dash=4;}
     if(b.dashT>0){b.dashT-=dt;b.vx=dir*200;}else b.vx+=(dir*55-b.vx)*Math.min(1,dt*3);
-    b.jt-=dt;if(b.jt<=0&&b.on){b.vy=-380;b.jt=3+Math.random()*1.5;}
+    b.jt-=dt;if(b.jt<=0&&b.on){b.vy=-380;b.jt=5+Math.random()*2;}
   } else if(b.kind==='rival'){b.face=dir;
     const sp=b.hp<=4?95:70;if(b.on)b.vx+=(dir*sp-b.vx)*Math.min(1,dt*2.5);
     b.jt-=dt;if(b.jt<=0&&b.on){b.vy=-440;b.jt=1.6+Math.random();}
