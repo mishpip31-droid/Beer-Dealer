@@ -638,7 +638,7 @@ function buildRoad(){
     if(rnd()<.6){const ln=lane(),hg=rnd()<.6?14:46;for(let i=0;i<4;i++)cr.push({x:x+70+i*16,lane:ln,hg,got:false});}
     x+=Math.floor(280-p*80+rnd()*170);}
   const traffic=[];for(let i=0;i<6;i++)traffic.push({x:400+i*520,v:110+Math.floor(rnd()*60),c:cols[i],van:i%3===0});
-  return {road:true,obs,cr,traffic,posts:[8200,8800,9400],end:10000,w:700,g:[],ents:[],vents:[],cps:[],
+  return {road:true,obs,cr,traffic,posts:[8200,8800,9400],radars:[{x:8500},{x:9100}],flash:0,end:10000,w:700,g:[],ents:[],vents:[],cps:[],
     car:{x:60,lane:2,ly:LY[2],z:0,vz:0,v:0,inv:0,hold:0,boost:0,wheel:0},cop:{i:0,t:2.2,watch:true},arrive:false,arriveT:0,jprev:false,pu:false,pd:false};
 }
 
@@ -1235,13 +1235,21 @@ function updRoad(dt){
   for(const k of L.cr)if(!k.got&&same(k.lane)&&hx(k.x,12)&&c.z<k.hg+12&&c.z+28>k.hg){k.got=true;addCoin();burst(k.x+6,LY[k.lane]-k.hg-6,'#ffd23f',5,90);}
   for(const t of L.traffic){t.x-=t.v*dt;if(t.x<c.x-VW)t.x=c.x+VW+200+Math.random()*400;}
   // гаишник
-  if(cop.i<3){cop.t-=dt;if(cop.t<=0){cop.watch=!cop.watch;cop.t=cop.watch?2+Math.random()*.9:1.4+Math.random()*.5;}
+  if(cop.i<3){const CT=[[2,.8,1.5,.5],[2.4,.9,1.1,.3],[2.8,1,.75,.25]][cop.i];
+    cop.t-=dt;if(cop.t<=0){cop.watch=!cop.watch;cop.t=cop.watch?CT[0]+Math.random()*CT[1]:CT[2]+Math.random()*CT[3];}
     const px=L.posts[cop.i];
+    if(cop.i>0&&L.copWarn!==cop.i&&c.x>px-500){L.copWarn=cop.i;caption(cop.i===1?'👮 Пост 2: этот строже — отворачивается реже!':'👮 Пост 3: самый строгий — окно совсем короткое!',2.6);}
     if(!L.copHint&&c.x>px-760){L.copHint=true;snd('whistle');caption('👮 Гаишник! Проезжай, только когда он отвернётся (☕). ◀ — тормоз',3.6);}
     if(c.x+70>=px){
       if(cop.watch&&!imm()){snd('whistle');caption('👮 «Стоп! Ваши документы!» — сдай назад и жди момент',2.4);c.x=px-330;c.v=0;c.hold=.8;shake=.2;}
       else{cop.i++;snd('coin');addScore(500,c.x+60,c.ly-40);caption(cop.i<3?'Проскочил! '+cop.i+'/3':'Гаишник остался ни с чем! 😎',2);if(cop.i<3){cop.watch=true;cop.t=1.2+Math.random()*.8;}}}}
-  else if(c.x>L.end-260){L.arrive=true;L.arriveT=0;caption('«Евроопт» 🏪 — приехали!',2.5);snd('clear');addScore(1000);}
+  for(const r of L.radars){
+    if(!r.hint&&c.x>r.x-650){r.hint=true;if(!L.radarHint){L.radarHint=true;caption('📸 Камера! Ограничение 60 — держи ◀ и сбрось скорость',3);}}
+    if(!r.done&&c.x+60>=r.x){r.done=true;const kmh=Math.round(c.v*.4);
+      if(kmh>60&&!imm()){L.flash=.7;snd('glass');coins=Math.max(0,coins-10);hud();caption('📸 Вспышка! '+kmh+' км/ч при 60 — штраф 10 крышек',2.4);}
+      else{addScore(300,c.x+40,c.ly-40);snd('flag');caption('📸 '+kmh+' км/ч — аккуратно! +300',1.8);}}}
+  if(L.flash>0)L.flash-=dt;
+  if(cop.i>=3&&c.x>L.end-260){L.arrive=true;L.arriveT=0;caption('«Евроопт» 🏪 — приехали!',2.5);snd('clear');addScore(1000);}
   L.mi=L.mi||0;if(L.mi<MARKS.length&&c.x+120>MARKS[L.mi].x){caption(MARKS[L.mi].t,2.2);L.mi++;}
   cam=Math.max(0,c.x-VW*.22);
 }
@@ -1569,6 +1577,10 @@ function drawRoad(){
   for(const y of [186,201])for(let x=-(cam%40);x<VW;x+=40)RR('#d8d8d8',Math.floor(x),y,20,1);
   RR('#9a9488',0,217,VW,7);RR('#7d776c',0,217,VW,1);
   for(const t of L.traffic){const x=t.x-cam;if(x>-70&&x<VW+10)drawSimpleCar(x,166,t.c,t.van);}
+  for(const r of L.radars){const x=Math.round(r.x-cam);if(x<-40||x>VW+40)continue;
+    RR('#8a8f99',x,96,2,42);RR('#e8e8e8',x-6,92,14,8);RR('#333',x-8,94,3,4);RR('#111',x-9,95,2,2);RR(Math.floor(time*2)%2?'#ff3b3b':'#7a1212',x+5,93,2,2);
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+1,112,8,0,7);ctx.fill();ctx.strokeStyle='#d62828';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+1,112,7,0,7);ctx.stroke();
+    ctx.fillStyle='#111';ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillText('60',x+1,115);}
   if(cop.i<3){const px=L.posts[cop.i]-cam;if(px>-40&&px<VW+40){
       RR('#ffffff',px+18,112,2,26);RR('#1d4e89',px+12,104,14,10);ctx.fillStyle='#fff';ctx.font='bold 6px sans-serif';ctx.textAlign='center';ctx.fillText('ДПС',px+19,111);
       drawCop(px,150,-1,!cop.watch);
@@ -1590,7 +1602,10 @@ function drawRoad(){
       if(!(c.inv>0&&Math.floor(time*20)%2))drawCar(cx,c.ly-c.z,c.wheel,true);
       if(c.boost>0&&Math.floor(time*20)%2){RR('#ffd23f',cx-8,c.ly-c.z-12,6,2);RR('#ff8c1a',cx-14,c.ly-c.z-8,8,2);}}
   }
+  if(L.radars.some(r=>!r.done&&r.x-c.x<700&&r.x>c.x)){const kmh=Math.round(c.v*.4),cx=Math.round(c.x-cam);
+    RR('#000a',cx+14,c.ly-c.z-46,46,13);ctx.fillStyle=kmh>60?'#ff4d4d':'#7dff6a';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(kmh+' км/ч',cx+37,c.ly-c.z-36);}
   drawFx();ctx.restore();
+  if(L.flash>0){ctx.fillStyle='rgba(255,255,255,'+Math.min(1,L.flash*1.4)+')';ctx.fillRect(0,0,VW,VH);}
   if(fade>0){ctx.fillStyle='rgba(0,0,0,'+fade+')';ctx.fillRect(0,0,VW,VH);}
 }
 function draw(){
