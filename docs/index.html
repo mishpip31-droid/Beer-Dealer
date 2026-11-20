@@ -681,7 +681,7 @@ function gAt(x){x=Math.round(x);if(x<0)return L.G[0];if(x>=L.G.length)return L.G
 function bikeSpawn(cx){let gx=cx;const ok=x=>!isNaN(gAt(x-BWB/2-6))&&!isNaN(gAt(x+BWB/2+6));let k=0;while(!ok(gx)&&k<400){gx+=2;k++;}if(!ok(gx)){gx=cx;while(!ok(gx)&&gx>40)gx-=2;}const b={w1:{},w2:{},inv:1,boost:0,wheel:0,ped:0,crashT:0};
   for(const [w,o] of [[b.w1,-BWB/2],[b.w2,BWB/2]]){w.x=gx+o;w.y=(isNaN(gAt(w.x))?gAt(gx):gAt(w.x))-BR;w.px=w.x;w.py=w.y;w.on=true;}
   return b;}
-function bikeCrash(msg){const b=L.b;if(god){const c=L.cpX||60;L.b=bikeSpawn(c);return;}
+function bikeCrash(msg){const b=L.b;if(imm()){const c=L.cpX||60;L.b=bikeSpawn(c);return;}
   lives--;hud();snd('hurt');shake=.3;burst((b.w1.x+b.w2.x)/2,(b.w1.y+b.w2.y)/2-10,'#ffffff',14,160);caption(msg,1.6);
   if(lives<=0){gameOver();return;}L.b=bikeSpawn(L.cpX||60);}
 function updBike(dt){
@@ -894,16 +894,17 @@ function planPct(){if(!L||lvl>=STAGES)return 100;const f=L.road?L.car.x/L.end:L.
 function hud(){if(lvl>=STAGES)return;
   $('hc').textContent='🟡 ×'+coins;$('hs').textContent='📈 План '+planPct()+'%';$('hl').textContent='❤ ×'+lives;
   $('hv').textContent=(lvl+1)+'/'+STAGES+' · '+THEMES[lvl].name+(lvl===0?' · 📄'+docs+'/3':'');
-  Z.t.classList.toggle('hide',!(hero&&(hero.big||god)&&state==='play'&&!(L&&L.road)));
-  $('bsk').style.display=god&&state!=='title'?'':'none';if(god)$('hl').textContent='🛡 ❤ ×'+lives;
+  Z.t.classList.toggle('hide',!(hero&&(hero.big||imm())&&state==='play'&&!(L&&L.road)));
+  $('bsk').style.display=god&&state!=='title'?'':'none';if(imm())$('hl').textContent='🛡 ❤ ×'+lives;
   const bb=$('bossbar');document.body.classList.toggle('bossOn',!!((L&&L.road&&L.cop.i<3&&L.car.x>L.posts[0]-700)||(boss&&boss.alive&&L&&L.arena&&L.arena.locked)));
   if(L&&L.road){const c=L.cop;if(c.i<3&&L.car.x>L.posts[0]-700){bb.style.display='block';$('bn').textContent='Гаишник с жезлом';$('bf').style.width=(100*(3-c.i)/3)+'%';}else bb.style.display='none';}
   else if(boss&&boss.alive&&L.arena&&L.arena.locked){bb.style.display='block';$('bn').textContent=boss.name;$('bf').style.width=(100*boss.hp/boss.maxHp)+'%';}else bb.style.display='none';}
 // ---------- секретный режим суперагента (10 нажатий на название в меню или слово hero на клавиатуре) ----------
+let fair=false;function imm(){return god&&!fair;}
 let god=false;try{god=localStorage.getItem('agent05_god')==='1';}catch(e){}
 function setGod(on){god=on;try{localStorage.setItem('agent05_god',on?'1':'0');}catch(e){}
   const t=on?'🛡 Режим суперагента включён':'Режим суперагента выключен';
-  if(state==='title'){const m=$('godmsg');m.textContent=t;m.style.display='';clearTimeout(setGod.tm);setGod.tm=setTimeout(()=>m.style.display='none',2500);}else caption(t,2.2);
+  if(state==='title'){renderMenu();const m=$('godmsg');m.textContent=t;m.style.display='';clearTimeout(setGod.tm);setGod.tm=setTimeout(()=>m.style.display='none',2500);}else caption(t,2.2);
   snd(on?'power':'bump');hud();}
 let ttlTaps=0,ttlLast=0;
 function ttlTap(){const n=performance.now();ttlTaps=n-ttlLast<1200?ttlTaps+1:1;ttlLast=n;if(ttlTaps>=10){ttlTaps=0;setGod(!god);}}
@@ -923,12 +924,17 @@ function renderMenu(){
   const br=document.createElement('div');br.style.flexBasis='100%';m.appendChild(br);
   THEMES.forEach((t,i)=>add(i<=u?(i+1)+'. '+t.name:'🔒 '+(i+1),i<=u?'':'lock',i<=u?()=>startGame(i):null));
   add(STAGES<=u?'🎉 Сюрприз':'🔒 ???',STAGES<=u?'':'lock',STAGES<=u?()=>startGame(STAGES):null);
+  if(god){const br2=document.createElement('div');br2.style.cssText='flex-basis:100%;color:#ffcc33;font-weight:800;margin-top:.3em';br2.textContent='⚔️ Боссы (честный бой)';m.appendChild(br2);
+    for(const [t,l] of [['👮 Гаишник',1],['Заведующая',2],['Агент Аливарии',4],['🚚 Эвакуатор',5]])add(t,'',()=>startBoss(l));}
 }
-function startGame(n){seenHints={};lives=5;coins=0;score=0;totalCoins=0;cpIdx=-1;lvl=n;
+function startBoss(n){seenHints={};for(const k in HINTS)seenHints[k]=1;lives=5;coins=0;score=0;totalCoins=0;lvl=n;cpIdx=99;fair=true;
+  $('hud').style.display='';document.body.classList.remove('fin');startLevel();
+  if(L&&L.road){L.car.x=L.posts[0]-900;L.obs=L.obs.filter(o=>o.x>L.car.x+200);L.cr=[];caption('👮 Бой с гаишником: проскочи 3 поста!',2.5);}}
+function startGame(n){fair=false;seenHints={};lives=5;coins=0;score=0;totalCoins=0;cpIdx=-1;lvl=n;
   if(dbg){lvl=dbg.lvl;cpIdx=dbg.cp;dbg=null;}
   $('hud').style.display='';document.body.classList.remove('fin');
   if(lvl>=STAGES){lvl=STAGES;startParty();}else showCall(lvl);}
-function goTitle(){$('o-gift').classList.remove('show');setRoadUI(false);state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
+function goTitle(){fair=false;$('o-gift').classList.remove('show');setRoadUI(false);state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
   document.body.classList.remove('fin','bossOn');$('cap').classList.remove('show');$('banner').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');}
 function togglePause(){if(state==='play'){state='pause';showOv('o-pause');}else if(state==='pause'){state='play';showOv(null);}}
 const CALLS=[
@@ -1044,7 +1050,7 @@ function canGrow(o,w,hh){const x=o.x-(w-o.w)/2,y=o.y+o.h-hh;
 function setGiant(h,on){if(!!h.giant===on)return true;const w=on?14:11,hh=on?28:22;if(on&&!canGrow(h,w,hh))return false;
   h.x-=(w-h.w)/2;h.y+=h.h-hh;h.w=w;h.h=hh;h.giant=on;return true;}
 function hurtHero(){
-  if(god)return;
+  if(imm())return;
   if(hero.inv>0||hero.dead)return;
   if(hero.giant){setGiant(hero,false);hero.inv=1.6;snd('hurt');burst(hero.x+6,hero.y+10,'#f2b632',10,160);caption('Ой! Снова обычного роста',1.6);hud();}
   else if(hero.big){hero.big=false;hero.inv=1.6;snd('hurt');burst(hero.x+6,hero.y+10,'#f2b632',10,160);hud();}
@@ -1079,7 +1085,7 @@ function update(dt){
   if(L.bike){updBike(dt);stepFx(dt);hud();return;}
   const h=hero;
   if(h.freezeCD>0)h.freezeCD-=dt;if(h.slipT>0)h.slipT-=dt;
-  if(god){h.frozen=0;h.slipT=0;}
+  if(imm()){h.frozen=0;h.slipT=0;}
   if(h.frozen>0){h.frozen-=dt;K.l=K.r=K.j=K.t=false;}
   h.pb=h.y+h.h;
   const under=tile(Math.floor((h.x+h.w/2)/T),Math.floor((h.y+h.h+1)/T));
@@ -1095,7 +1101,7 @@ function update(dt){
   h.jprev=K.j;
   // бросок бутылки
   h.tcd-=dt;
-  if(K.t&&!h.tprev&&(h.big||god)&&h.tcd<=0&&bottles.length<3){
+  if(K.t&&!h.tprev&&(h.big||imm())&&h.tcd<=0&&bottles.length<3){
     bottles.push({x:h.x+(h.face>0?h.w:-5),y:h.y+6,w:5,h:6,vx:h.face*200+h.vx*.25,vy:-120,rot:0});h.tcd=.28;snd('throw');}
   h.tprev=K.t;
   h.vy=Math.min(560,h.vy+1500*dt);
@@ -1107,7 +1113,7 @@ function update(dt){
   if(h.inv>0)h.inv-=dt;
   if(h.growPend&&h.big&&setGiant(h,true)){h.growPend=false;snd('life');caption('Вторая кружка! Ты стал больше и сильнее 💪',2.5);}
   if(h.on&&!h.dead){h.safeX=h.x;h.safeY=h.y;}
-  if(h.y>VH+20){if(god&&h.safeX!==undefined){h.x=h.safeX;h.y=h.safeY-4;h.vx=0;h.vy=0;h.inv=1;}else{dieHero();return;}}
+  if(h.y>VH+20){if(imm()&&h.safeX!==undefined){h.x=h.safeX;h.y=h.safeY-4;h.vx=0;h.vy=0;h.inv=1;}else{dieHero();return;}}
   for(let i=L.cps.length-1;i>cpIdx;i--)if(h.x>L.cps[i]*T){cpIdx=i;pops.push({x:h.x,y:h.y-10,t:1.2,s:'Чекпоинт!'});snd('flag');break;}
   // эвакуатор уезжает в начале 5 уровня
   if(L.introTow){L.introTow.x+=150*dt;if(L.introTow.x>cam+VW+120)L.introTow=null;}
@@ -1170,7 +1176,7 @@ function update(dt){
     }
     if(ov(h,e)&&!h.dead){
       const stomp=h.vy>0&&h.y+h.h-e.y<10;
-      if(god&&!(STOMP.has(e.t)&&stomp)){killEnemy(e,true);}
+      if(imm()&&!(STOMP.has(e.t)&&stomp)){killEnemy(e,true);}
       else if(e.t==='ice'){if(stomp){h.vy=-300;h.vx=(dx>=0?1:-1)*140;snd('bump');caption('Скользко! Мороженое бей бутылкой 🍾',1.4);}
         else if(h.freezeCD<=0&&h.inv<=0){h.frozen=1.1;h.freezeCD=2.4;h.vx=0;snd('glass');burst(h.x+h.w/2,h.y+10,'#bfe9ff',12,120);caption('Брр! Заморозило ❄️',1.2);}}
       else if(STOMP.has(e.t)&&stomp){killEnemy(e,false);h.vy=K.j?-430:-260;}
@@ -1179,7 +1185,7 @@ function update(dt){
   }
   enemies=enemies.filter(e=>e.alive||e.dt>0);
   // банановая кожура
-  for(const p of peels){p.t-=dt;if(!god&&h.on&&h.slipT<=0&&ov(h,p)){p.t=0;h.slipT=1.3;h.vx=(h.vx>=0?1:-1)*Math.max(170,Math.abs(h.vx));snd('splash');caption('Поскользнулся на кожуре! 🍌',1.3);}}
+  for(const p of peels){p.t-=dt;if(!imm()&&h.on&&h.slipT<=0&&ov(h,p)){p.t=0;h.slipT=1.3;h.vx=(h.vx>=0?1:-1)*Math.max(170,Math.abs(h.vx));snd('splash');caption('Поскользнулся на кожуре! 🍌',1.3);}}
   peels=peels.filter(p=>p.t>0);
   updBoss(dt);
   // снаряды босса
@@ -1194,7 +1200,7 @@ function update(dt){
 function gameOver(){state='over';timer=1;msg('Смена окончена','Счёт: '+score+' · нажми, чтобы вернуться в меню');}
 
 // ---------- трасса ----------
-function crash(){const c=L.car;if(god){c.inv=.5;return;}lives--;hud();snd('hurt');c.inv=1.6;c.vz=240;c.v*=.4;shake=.3;burst(c.x+36,c.ly-c.z-10,'#ffffff',12,160);
+function crash(){const c=L.car;if(imm()){c.inv=.5;return;}lives--;hud();snd('hurt');c.inv=1.6;c.vz=240;c.v*=.4;shake=.3;burst(c.x+36,c.ly-c.z-10,'#ffffff',12,160);
   caption(['Ай! Подвеска!','Осторожно, груз!','Бутылки звенят…'][Math.floor(Math.random()*3)],1.4);if(lives<=0)gameOver();}
 function updRoad(dt){
   const c=L.car,cop=L.cop;
@@ -1233,7 +1239,7 @@ function updRoad(dt){
     const px=L.posts[cop.i];
     if(!L.copHint&&c.x>px-760){L.copHint=true;snd('whistle');caption('👮 Гаишник! Проезжай, только когда он отвернётся (☕). ◀ — тормоз',3.6);}
     if(c.x+70>=px){
-      if(cop.watch&&!god){snd('whistle');caption('👮 «Стоп! Ваши документы!» — сдай назад и жди момент',2.4);c.x=px-330;c.v=0;c.hold=.8;shake=.2;}
+      if(cop.watch&&!imm()){snd('whistle');caption('👮 «Стоп! Ваши документы!» — сдай назад и жди момент',2.4);c.x=px-330;c.v=0;c.hold=.8;shake=.2;}
       else{cop.i++;snd('coin');addScore(500,c.x+60,c.ly-40);caption(cop.i<3?'Проскочил! '+cop.i+'/3':'Гаишник остался ни с чем! 😎',2);if(cop.i<3){cop.watch=true;cop.t=1.2+Math.random()*.8;}}}}
   else if(c.x>L.end-260){L.arrive=true;L.arriveT=0;caption('«Евроопт» 🏪 — приехали!',2.5);snd('clear');addScore(1000);}
   L.mi=L.mi||0;if(L.mi<MARKS.length&&c.x+120>MARKS[L.mi].x){caption(MARKS[L.mi].t,2.2);L.mi++;}
