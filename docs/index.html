@@ -84,16 +84,12 @@ body.fin #cap{top:auto;bottom:6vh}
   <p class="small" id="kbhint">Клавиатура: ← → движение, ↑ / пробел — прыжок, X — бросить бутылку</p>
 </div>
 <div class="ov" id="o-call"><div class="phone"><h2 id="cw"></h2><p id="ct"></p><p class="small blink" style="margin-top:.6em">Нажми, чтобы продолжить</p></div></div>
-<div class="ov" id="o-gift" style="background:#000d;pointer-events:auto;z-index:20"><h2>🎁 Твой подарок!</h2>
-  <img id="gimg" alt="" style="max-width:86vw;max-height:58vh;border:4px solid #ffcc33;border-radius:10px;background:#fff;object-fit:contain">
-  <div style="margin-top:.5em"><button class="mbtn main" id="gsave">💾 Сохранить на телефон</button><button class="mbtn" id="gnext">Дальше ▶</button></div></div>
 <div class="ov" id="o-msg"><h2 id="mt"></h2><p id="ms"></p></div>
 <div class="ov" id="o-pause"><h2>Пауза</h2><div id="pmenu"><button class="mbtn main" id="bres">▶ Продолжить</button><button class="mbtn" id="bmenu">🏠 В меню</button></div></div>
 <div class="ov" id="o-bday">
   <h1 id="bh">С днём рождения!</h1>
   <p>🎉 Пусть пиво будет холодным, план — перевыполненным, а белая Kia Rio — всегда на ходу! 🎉</p>
   <p class="small" id="bscore"></p>
-  <button class="mbtn" id="bgift" style="display:none;pointer-events:auto;margin-top:.4em">🎁 Мой подарок</button>
   <p class="small blink" id="bagain" style="visibility:hidden">Нажми — в меню</p>
 </div>
 
@@ -849,7 +845,7 @@ function setRoadUI(on){Z.j.classList.remove('hide');Z.u.classList.toggle('hide',
 function inZone(el,x,y,pad){const b=el.getBoundingClientRect();if(!b.width)return false;const cx=b.left+b.width/2,cy=b.top+b.height/2,rr=b.width/2+pad;return (x-cx)**2+(y-cy)**2<rr*rr;}
 function onPtr(e){
   if(rotBlock)return;
-  if(e.target.closest&&e.target.closest('.ib,.mbtn,#ttl,#o-gift'))return;
+  if(e.target.closest&&e.target.closest('.ib,.mbtn,#ttl'))return;
   if(e.pointerType==='touch')document.body.classList.add('touch');
   if(e.type==='pointerdown'){anyPress();taps.push({x:e.clientX,y:e.clientY});}
   if(e.type==='pointerup'||e.type==='pointercancel')ptrs.delete(e.pointerId);else if(e.type==='pointerdown'||ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -934,7 +930,7 @@ function startGame(n){fair=false;seenHints={};lives=5;coins=0;score=0;totalCoins
   if(dbg){lvl=dbg.lvl;cpIdx=dbg.cp;dbg=null;}
   $('hud').style.display='';document.body.classList.remove('fin');
   if(lvl>=STAGES){lvl=STAGES;startParty();}else showCall(lvl);}
-function goTitle(){fair=false;$('o-gift').classList.remove('show');setRoadUI(false);state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
+function goTitle(){fair=false;setRoadUI(false);state='title';L=null;fw=[];party=null;boss=null;showOv('o-title');renderMenu();$('hud').style.display='none';
   document.body.classList.remove('fin','bossOn');$('cap').classList.remove('show');$('banner').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');}
 function togglePause(){if(state==='play'){state='pause';showOv('o-pause');}else if(state==='pause'){state='play';showOv(null);}}
 const CALLS=[
@@ -953,8 +949,6 @@ function anyPress(){
   if(state==='title'){}
   else if(state==='call'&&timer<=0){if(lvl>=STAGES)startParty();else startLevel();}
   else if(state==='pause')togglePause();
-  else if(state==='party'&&party&&party.giftShow){if(!party.giftOpen){party.giftOpen=true;party.gt=0;snd('party');shake=.2;
-      for(let i=0;i<40;i++)parts.push({x:Math.round(VW*.36)+53,y:150,vx:(Math.random()-.5)*240,vy:-80-Math.random()*200,t:1.5,c:FWC[i%FWC.length],g:300,s:2});$('cap').classList.remove('show');}}
   else if(state==='party'&&party&&party.t>PARTY_START){const li=Math.floor((party.t-PARTY_START)/PARTY_STEP);party.t=PARTY_START+(li+1)*PARTY_STEP;}
   else if((state==='over'||state==='bday')&&timer<=0)goTitle();
 }
@@ -1339,12 +1333,6 @@ function updCut(dt){
 }
 
 // ---------- сюрприз дома ----------
-let GIFT='';try{if(window.AndroidGift)GIFT=AndroidGift.name()||'';}catch(e){}
-function openGiftView(fromFinale){const o=$('o-gift');$('gimg').src=GIFT;$('gnext').textContent=fromFinale?'Закрыть':'Дальше ▶';
-  $('gsave').textContent='💾 Сохранить на телефон';o.dataset.fin=fromFinale?'1':'';o.classList.add('show');}
-function saveGift(){let r='err';try{r=AndroidGift.save();}catch(e){}
-  $('gsave').textContent=r==='ok'?'✅ Сохранено в Галерею':r==='perm'?'Разреши доступ и нажми ещё раз':'❌ Не удалось сохранить';}
-function closeGift(){const o=$('o-gift');o.classList.remove('show');if(!o.dataset.fin&&state==='party'){party.giftDone=true;$('cap').classList.remove('show');startFinale();}}
 const HOME_IN=5.2,HOME_LIT=9.2,PARTY_START=10.4,PARTY_STEP=3;
 const PARTY_LINES=['Мы весь день готовили тебе праздник! 🎈','Это мы попросили начальника задержать тебя 😄','С днём рождения! 🎂🎉'];
 function startParty(){
@@ -1363,13 +1351,10 @@ function updParty(dt){
   if(p.lit&&Math.random()<dt*12)parts.push({x:Math.random()*VW,y:-4,vx:(Math.random()-.5)*30,vy:30+Math.random()*40,t:6,c:FWC[Math.floor(Math.random()*FWC.length)],g:15,s:2});
   const li=Math.floor((p.t-PARTY_START)/PARTY_STEP);
   if(li>=0&&li<PARTY_LINES.length&&li!==p.line){p.line=li;caption(PARTY_LINES[li],PARTY_STEP-.2);snd('paper');}
-  if(li>=PARTY_LINES.length){
-    if(GIFT&&!p.giftDone){if(!p.giftShow){p.giftShow=true;p.gt=0;snd('power');caption('А это тебе подарок! 🎁 Нажми на него',99);}
-      p.gt+=dt;if(p.giftOpen&&!p.giftViewed&&p.gt>.9){p.giftViewed=true;openGiftView(false);}return;}
-    $('cap').classList.remove('show');startFinale();}
+  if(li>=PARTY_LINES.length){$('cap').classList.remove('show');startFinale();}
 }
 function startFinale(){
-  state='bday';fade=0;timer=4;fw=[];showOv('o-bday');$('bgift').style.display=GIFT?'':'none';
+  state='bday';fade=0;timer=4;fw=[];showOv('o-bday');
   $('bh').textContent='С днём рождения'+(HB_NAME?', '+HB_NAME:'')+'!';
   $('bscore').textContent='Точек обслужено: 4 · Крышек собрано: '+totalCoins+' · Счёт: '+score+' ★';$('bagain').style.visibility='hidden';
   $('cap').classList.remove('show');$('bossbar').style.display='none';Z.t.classList.add('hide');$('hud').style.display='none';document.body.classList.add('fin');
@@ -1717,12 +1702,6 @@ function drawHomeInside(p){
   const tx=Math.round(VW*.36);RR('#f4f1ea',tx,160,60,4);RR('#4a4a4a',tx+4,164,3,28);RR('#4a4a4a',tx+53,164,3,28);
   RR('#ffffff',tx+18,146,26,14);RR('#f3a6c0',tx+18,146,26,4);RR('#c0505a',tx+20,152,22,2);
   for(let i=0;i<4;i++){RR('#7ec8e3',tx+21+i*6,138,2,8);if(lit||Math.floor(time*8+i)%2)RR(Math.floor(time*10+i)%2?'#ffd23f':'#ff8c1a',tx+21+i*6,134,2,3);}
-  if(p.giftShow){const gx=tx+46,bob=p.giftOpen?0:Math.abs(Math.sin(time*4))*3,gy=160-12-bob;
-    if(!p.giftOpen){ctx.fillStyle='rgba(255,230,120,'+(.35+.25*Math.sin(time*6))+')';ctx.beginPath();ctx.arc(gx+7,gy+6,14,0,7);ctx.fill();}
-    RR('#d62828',gx,gy+3,14,9);RR('#ffd23f',gx+6,gy+3,2,9);
-    const ly=p.giftOpen?gy-Math.min(40,p.gt*80):gy;RR('#e63946',gx-1,ly,16,4);RR('#ffd23f',gx+6,ly,2,4);
-    if(!p.giftOpen){RR('#ffd23f',gx+3,ly-3,4,3);RR('#ffd23f',gx+8,ly-3,4,3);
-      ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('👆',gx+7,gy-10-Math.abs(Math.sin(time*5))*3);}}
   RR('#e9e4da',VW-40,170,18,22);RR('#3f8a3a',VW-46,140,10,30);RR('#4fa04a',VW-34,136,12,34);RR('#3f8a3a',VW-26,146,8,24);
   // герой
   const t=p.t-HOME_IN,walk=Math.min(1,t/2.2),hx=-20+walk*(VW*.26+20),jy=lit?Math.abs(Math.sin(time*5))*8:0;
@@ -1796,9 +1775,6 @@ function loop(now){
 (function(){const q=new URLSearchParams(location.search);if(q.has('lvl'))dbg={lvl:Math.max(0,Math.min(STAGES,+q.get('lvl')-1)),cp:q.has('boss')?99:-1};})();
 $('ttl').addEventListener('pointerdown',e=>{e.stopPropagation();ttlTap();});
 $('bsk').addEventListener('pointerdown',e=>{e.stopPropagation();skipLevel();});
-$('gsave').addEventListener('click',e=>{e.stopPropagation();saveGift();});
-$('gnext').addEventListener('click',e=>{e.stopPropagation();closeGift();});
-$('bgift').addEventListener('pointerdown',e=>{e.stopPropagation();openGiftView(true);});
 $('bres').addEventListener('click',e=>{e.stopPropagation();if(state==='pause')togglePause();});
 $('bmenu').addEventListener('click',e=>{e.stopPropagation();goTitle();});
 goTitle();requestAnimationFrame(loop);
